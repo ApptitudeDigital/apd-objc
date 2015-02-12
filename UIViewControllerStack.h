@@ -9,6 +9,7 @@ typedef NS_ENUM(NSInteger,UIViewControllerStackOperation) {
 };
 
 @protocol UIViewControllerStackUpdating <NSObject>
+@optional
 - (void) viewStack:(UIViewControllerStack *) viewStack willShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack willHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
