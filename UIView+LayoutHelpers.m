@@ -92,10 +92,12 @@
 }
 
 - (CGFloat) width {
+	return self.size.width;
 	return CGRectGetWidth(self.frame);
 }
 
 - (CGFloat) height {
+	return self.size.height;
 	return CGRectGetHeight(self.frame);
 }
 
