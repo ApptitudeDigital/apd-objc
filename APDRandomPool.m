@@ -20,7 +20,7 @@
 	if(_pool.count == 0){
 		_pool = [[NSMutableArray alloc] initWithArray:_array];
 	}
-	NSInteger random = (NSInteger)arc4random_uniform(_pool.count);
+	NSUInteger random = arc4random_uniform((int32_t)_pool.count);
 	NSObject *nextItem = [_pool objectAtIndex:random];
 	[_pool removeObjectAtIndex:random];
 	if(self.delegate){
