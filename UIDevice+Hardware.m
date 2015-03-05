@@ -71,8 +71,27 @@
 	return deviceName;
 }
 
-- (BOOL) isIphone4Or4S {
+- (BOOL) isIphone4 {
+	if([self isSimulator]) {
+		CGRect bounds = [UIScreen mainScreen].bounds;
+		if(bounds.size.width == 320 && bounds.size.height == 480) {
+			return TRUE;
+		}
+	}
 	return [[self deviceName] isEqualToString:@"iPhone4"] || [[self deviceName] isEqualToString:@"iPhone 4S"];
+}
+
+- (BOOL) isIphone5 {
+	if([self isSimulator]) {
+		CGRect bounds = [UIScreen mainScreen].bounds;
+		if(bounds.size.width == 640 && bounds.size.height == 1136) {
+			return TRUE;
+		}
+		if(bounds.size.width == 320 && bounds.size.height == 568) {
+			return TRUE;
+		}
+	}
+	return [[self deviceName] isEqualToString:@"iPhone5"] || [[self deviceName] isEqualToString:@"iPhone 5s"] || [[self deviceName] isEqualToString:@"iPhone 5c"];
 }
 
 - (BOOL) is32AspectRatio {

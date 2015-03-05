@@ -15,4 +15,6 @@
 - (void) matchHeightByConstraintToView:(UIView *) view;
 - (void) matchWidthByConstraintToView:(UIView *) view;
 
+- (NSLayoutConstraint *) constraintWithFirstAttribute:(NSLayoutAttribute) attribute;
+
 @end

@@ -3,6 +3,15 @@
 
 @implementation UIView (AutoLayout)
 
+- (NSLayoutConstraint *) constraintWithFirstAttribute:(NSLayoutAttribute) attribute; {
+	for(NSLayoutConstraint * constraint in self.constraints) {
+		if(constraint.firstAttribute == attribute) {
+			return constraint;
+		}
+	}
+	return nil;
+}
+
 - (void) removeConstraintsWithFirstAttribute:(NSLayoutAttribute) attribute; {
 	NSMutableArray * remove = [NSMutableArray array];
 	for(NSLayoutConstraint * constraint in self.constraints) {
