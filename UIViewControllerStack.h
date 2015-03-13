@@ -30,6 +30,7 @@ IB_DESIGNABLE
 - (void) popToRootViewControllerAnimated:(BOOL) animated;
 - (void) eraseStackAndPushViewController:(UIViewController *) viewController animated:(BOOL) animated;
 - (void) replaceCurrentViewControllerWithViewController:(UIViewController *) viewController animated:(BOOL) animated;
+- (void) pushViewControllers:(NSArray *) viewControllers animated:(BOOL) animated;
 
 //util methods for updating what's in the stack without effecting what's displayed.
 - (void) pushViewControllers:(NSArray *) viewControllers;

@@ -176,6 +176,16 @@
 	[self.viewControllers addObject:viewController];
 }
 
+- (void) pushViewControllers:(NSArray *) viewControllers animated:(BOOL) animated; {
+	UIViewController * current = self.currentViewController;
+	[self.viewControllers addObjectsFromArray:viewControllers];
+	if(animated) {
+		[self animatePushFromController:current toController:self.viewControllers.lastObject withDuration:self.animationDuration];
+	} else {
+		[self animatePushFromController:current toController:self.viewControllers.lastObject withDuration:0];
+	}
+}
+
 - (void) pushViewControllers:(NSArray *) viewControllers; {
 	[self.viewControllers addObjectsFromArray:viewControllers];
 }
