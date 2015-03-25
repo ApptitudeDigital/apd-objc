@@ -168,22 +168,22 @@
 }
 
 - (void) pushViewController:(UIViewController *) viewController animated:(BOOL) animated; {
+	float duration = 0;
 	if(animated) {
-		[self animatePushFromController:[self currentViewController] toController:viewController withDuration:self.animationDuration];
-	} else {
-		[self animatePushFromController:[self currentViewController] toController:viewController withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePushFromController:[self currentViewController] toController:viewController withDuration:duration];
 	[self.viewControllers addObject:viewController];
 }
 
 - (void) pushViewControllers:(NSArray *) viewControllers animated:(BOOL) animated; {
 	UIViewController * current = self.currentViewController;
 	[self.viewControllers addObjectsFromArray:viewControllers];
+	float duration = 0;
 	if(animated) {
-		[self animatePushFromController:current toController:self.viewControllers.lastObject withDuration:self.animationDuration];
-	} else {
-		[self animatePushFromController:current toController:self.viewControllers.lastObject withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePushFromController:current toController:self.viewControllers.lastObject withDuration:duration];
 }
 
 - (void) pushViewControllers:(NSArray *) viewControllers; {
@@ -197,42 +197,42 @@
 - (void) popViewControllerAnimated:(BOOL) animated; {
 	UIViewController * current = [self currentViewControllerByRemovingLastObject];
 	UIViewController * nxt = [self currentViewController];
+	float duration = 0;
 	if(animated) {
-		[self animatePopFromController:current toController:nxt withDuration:self.animationDuration];
-	} else {
-		[self animatePopFromController:current toController:nxt withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePopFromController:current toController:nxt withDuration:duration];
 }
 
 - (void) popToRootViewControllerAnimated:(BOOL) animated; {
 	UIViewController * current = [self currentViewController];
 	UIViewController * nxt = self.viewControllers[0];
+	float duration = 0;
 	if(animated) {
-		[self animatePopFromController:current toController:nxt withDuration:self.animationDuration];
-	} else {
-		[self animatePopFromController:current toController:nxt withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePopFromController:current toController:nxt withDuration:duration];
 	[self.viewControllers removeAllObjects];
 	[self.viewControllers addObject:nxt];
 }
 
 - (void) eraseStackAndPushViewController:(UIViewController *) viewController animated:(BOOL) animated; {
+	float duration = 0;
 	if(animated) {
-		[self animatePushFromController:self.currentViewController toController:viewController withDuration:self.animationDuration];
-	} else {
-		[self animatePushFromController:self.currentViewController toController:viewController withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePushFromController:self.currentViewController toController:viewController withDuration:duration];
 	[self.viewControllers removeAllObjects];
 	[self.viewControllers addObject:viewController];
 }
 
 - (void) replaceCurrentViewControllerWithViewController:(UIViewController *) viewController animated:(BOOL) animated; {
 	UIViewController * currentViewController = [self currentViewController];
+	float duration = 0;
 	if(animated) {
-		[self animatePushFromController:currentViewController toController:viewController withDuration:self.animationDuration];
-	} else {
-		[self animatePushFromController:currentViewController toController:viewController withDuration:0];
+		duration = self.animationDuration;
 	}
+	[self animatePushFromController:currentViewController toController:viewController withDuration:duration];
 	[_viewControllers removeObject:currentViewController];
 	[_viewControllers addObject:viewController];
 }
@@ -270,6 +270,20 @@
 
 - (NSInteger) stackSize {
 	return self.viewControllers.count;
+}
+
+- (NSArray *) allViewControllers; {
+	return [NSArray arrayWithArray:self.viewControllers];
+}
+
+- (void) popToViewControllerInStackAtIndex:(NSUInteger) index animated:(BOOL) animated {
+	UIViewController * toController = [self.viewControllers objectAtIndex:index];
+	UIViewController * fromController = self.currentViewController;
+	float duration = 0;
+	if(animated) {
+		duration = self.animationDuration;
+	}
+	[self animatePopFromController:fromController toController:toController withDuration:duration];
 }
 
 - (BOOL) hasViewController:(UIViewController *) viewController {
