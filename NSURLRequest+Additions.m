@@ -4,11 +4,7 @@
 @implementation NSURLRequest (GWAdditions)
 
 + (BOOL) allowsAnyHTTPSCertificateForHost:(NSString*) host; {
-#if DEBUG
 	return TRUE;
-#else
-	return FALSE;
-#endif
 }
 
 + (NSURLRequest *) fileUploadRequestWithURL:(NSString *) url data:(NSData *) data fileName:(NSString *) fileName variables:(NSDictionary *) variables {
