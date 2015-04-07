@@ -36,6 +36,7 @@
 }
 
 - (void)defaults{
+	self.stopAtFrame = 0;
 	self.fileDirectory = [[NSBundle mainBundle] bundleURL];
 	self.fps = 24.0;
 }
@@ -75,6 +76,10 @@
 	return (CGFloat)_fileURLs.count/self.fps;
 }
 
+- (NSUInteger) currentFrame {
+	return floor(_position * self.fps);
+}
+
 - (void)setPosition:(CGFloat)position{
 	if(_fileURLs.count == 0){
 		return;
@@ -85,7 +90,7 @@
 	}
 	_position = position;
 	
-	NSInteger currentFrame = floor(_position * self.fps);
+	NSUInteger currentFrame = [self currentFrame];
 	if(currentFrame >= _fileURLs.count){
 		currentFrame = _fileURLs.count - 1;
 	}
@@ -94,18 +99,30 @@
 	self.image = image;
 }
 
+- (void) playToFrame:(float) frame {
+	self.stopAtFrame = frame;
+	[self play];
+}
 
 - (void)play{
 	if(_playTimer){
 		[_playTimer invalidate];
 	}
 	_playTimer = [NSTimer scheduledTimerWithTimeInterval:1.0/self.fps target:self selector:@selector(onTimerTick:) userInfo:nil repeats:YES];
+	
+	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerPlayed:)]) {
+		[self.delegate sequencePlayerPlayed:self];
+	}
 }
 
 - (void)pause{
 	if(_playTimer){
 		[_playTimer invalidate];
 		_playTimer = nil;
+	}
+	
+	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerPaused:)]) {
+		[self.delegate sequencePlayerPaused:self];
 	}
 }
 
@@ -115,12 +132,21 @@
 		_playTimer = nil;
 	}
 	self.position = 0.0;
+	
+	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerStopped:)]) {
+		[self.delegate sequencePlayerStopped:self];
+	}
 }
 
 - (void)onTimerTick:(NSTimer *)timer{
 	CGFloat posOffset = 1.0/self.fps;
 	CGFloat next = self.position + posOffset;
-	if(next > self.duration){
+	
+	if(self.stopAtFrame > -1 && self.stopAtFrame < [self currentFrame]) {
+		next = self.position - posOffset;
+	}
+	
+	if(next > self.duration) {
 		if(self.repeats){
 			self.position = 0.0;
 			return;
@@ -129,7 +155,17 @@
 			[self pause];
 		}
 	}
+	
 	self.position = next;
+	
+	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerEnterFrame:)]) {
+		[self.delegate sequencePlayerEnterFrame:self];
+	}
+	
+	if([self currentFrame] == self.stopAtFrame) {
+		[self pause];
+		self.stopAtFrame = -1;
+	}
 }
 
 @end
