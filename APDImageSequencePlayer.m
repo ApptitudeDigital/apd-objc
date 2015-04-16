@@ -36,7 +36,7 @@
 }
 
 - (void)defaults{
-	self.stopAtFrame = 0;
+	self.stopAtFrame = -1;
 	self.fileDirectory = [[NSBundle mainBundle] bundleURL];
 	self.fps = 24.0;
 }
