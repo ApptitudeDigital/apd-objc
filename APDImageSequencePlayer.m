@@ -138,6 +138,10 @@
 	}
 }
 
+- (void)seekToFrame:(CGFloat)frame{
+    self.position = frame/self.fps;
+}
+
 - (void)onTimerTick:(NSTimer *)timer{
 	CGFloat posOffset = 1.0/self.fps;
 	CGFloat next = self.position + posOffset;
