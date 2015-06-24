@@ -9,6 +9,6 @@
 + (NSMutableURLRequest *) fileUploadRequestWithURL:(NSURL *) url data:(NSData *) data fileName:(NSString *) fileName variables:(NSDictionary *) variables;
 
 //returns a POST request with data encoded like a standard web form. (application/x-www-form-urlencoded)
-+ (NSMutableURLRequest *) formURLEncodedPostRequest:(NSString *) url variables:(NSDictionary *) variables;
++ (NSMutableURLRequest *) formURLEncodedPostRequestWithURL:(NSURL *) url variables:(NSDictionary *) variables;
 
 @end

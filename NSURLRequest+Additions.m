@@ -42,8 +42,8 @@
 	return urlRequest;
 }
 
-+ (NSMutableURLRequest *) formURLEncodedPostRequest:(NSString *) url variables:(NSDictionary *) variables {
-	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] init];
++ (NSMutableURLRequest *) formURLEncodedPostRequestWithURL:(NSURL *) url variables:(NSDictionary *) variables {
+	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] initWithURL:url];
 	
 	NSMutableArray * vals = [[NSMutableArray alloc] init];
 	for(NSString * key in variables) {
