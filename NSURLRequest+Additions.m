@@ -7,11 +7,10 @@
 	return TRUE;
 }
 
-+ (NSURLRequest *) fileUploadRequestWithURL:(NSString *) url data:(NSData *) data fileName:(NSString *) fileName variables:(NSDictionary *) variables {
++ (NSMutableURLRequest *) fileUploadRequestWithURL:(NSURL *) url data:(NSData *) data fileName:(NSString *) fileName variables:(NSDictionary *) variables {
 	NSMutableData * postData = [NSMutableData data];
 	
-	NSMutableURLRequest * urlRequest = [[NSMutableURLRequest alloc] init];
-	[urlRequest setURL:[NSURL URLWithString:url]];
+	NSMutableURLRequest * urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
 	[urlRequest setHTTPMethod:@"POST"];
 	
 	NSString * myboundary = @"-14737809831466499882746641449";
@@ -41,6 +40,24 @@
 	[urlRequest setHTTPBody:postData];
 	
 	return urlRequest;
+}
+
++ (NSMutableURLRequest *) formURLEncodedPostRequest:(NSString *) url variables:(NSDictionary *) variables {
+	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] init];
+	
+	NSMutableArray * vals = [[NSMutableArray alloc] init];
+	for(NSString * key in variables) {
+		[vals addObject:[NSString stringWithFormat:@"%@=%@", key, [variables objectForKey:key]]];
+	}
+	
+	NSString * stringValues = [vals componentsJoinedByString:@"&"];
+	NSData * requestData = [NSData dataWithBytes:[stringValues UTF8String] length:[stringValues length]];
+	
+	[request setHTTPMethod:@"POST"];
+	[request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"content-type"];
+	[request setHTTPBody:requestData];
+	
+	return request;
 }
 
 @end
