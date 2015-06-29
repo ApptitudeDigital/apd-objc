@@ -59,4 +59,12 @@
 	}
 }
 
+- (IBAction)onClose:(id)sender{
+	if(self.delegate){
+		if([self.delegate respondsToSelector:@selector(debugViewControllerIsDone:)]){
+			[self.delegate debugViewControllerIsDone:self];
+		}
+	}
+}
+
 @end

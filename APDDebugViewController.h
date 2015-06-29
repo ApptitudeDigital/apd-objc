@@ -3,6 +3,7 @@
 @class APDDebugViewController;
 
 @protocol APDDebugViewControllerDelegate <NSObject>
+@optional
 - (void)debugViewControllerIsDone:(APDDebugViewController *)debugViewController;
 @end
 
@@ -23,5 +24,6 @@
 
 + (APDDebugViewControllerItem *)viewControllerItemWithName:(NSString *)name andSelector:(SEL)selector;
 - (void)insertItemWithName:(NSString *)name andSelector:(SEL)selector;
+- (IBAction)onClose:(id)sender;
 
 @end
