@@ -53,9 +53,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
 	APDDebugViewControllerItem *item = [self.items objectAtIndex:indexPath.row];
 	if([self respondsToSelector:item.selector]){
-		IMP imp = [self methodForSelector:item.selector];
-		void (*func)(id, SEL) = (void *)imp;
-		func(self, item.selector);
+		[self performSelectorOnMainThread:item.selector withObject:nil waitUntilDone:YES];
 	}
 }
 
