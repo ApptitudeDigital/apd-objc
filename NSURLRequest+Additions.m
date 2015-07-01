@@ -35,7 +35,7 @@
 		}
 	}
 	
-	NSString * postLength = [NSString stringWithFormat:@"%lu",postData.length];
+	NSString * postLength = [NSString stringWithFormat:@"%lu",(unsigned long)postData.length];
 	[urlRequest setValue:postLength forHTTPHeaderField:@"Content-Length"];
 	[urlRequest setHTTPBody:postData];
 	

@@ -1,5 +1,6 @@
-
 #import "UIViewControllerStack.h"
+
+
 
 @interface UIViewControllerStack ()
 @property NSMutableArray * viewControllers;
@@ -78,6 +79,17 @@
 		[fromControllerUpdating viewStack:self willHideView:UIViewControllerStackOperationPush wasAnimated:(duration>0)];
 	}
 	
+	NSMutableDictionary *notificationObject = [[NSMutableDictionary alloc] init];
+	if(toController){
+		[notificationObject setObject:toController forKey:@"toController"];
+	}
+	if(fromController){
+		[notificationObject setObject:fromController forKey:@"fromController"];
+	}
+	[notificationObject setObject:self forKey:@"viewStack"];
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationWillPush object:notificationObject];
+	
 	//trigger animation, moving current off to the left, new view controller in from the right.
 	[UIView animateWithDuration:duration delay:0 options:options animations:^{
 		CGRect f;
@@ -105,6 +117,8 @@
 		if([toController respondsToSelector:@selector(viewStack:didShowView:wasAnimated:)]) {
 			[toControllerUpdating viewStack:self didShowView:UIViewControllerStackOperationPush wasAnimated:(duration>0)];
 		}
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationDidPush object:notificationObject];
 	}];
 }
 
@@ -138,6 +152,16 @@
 		[toControllerUpdating viewStack:self willShowView:UIViewControllerStackOperationPop wasAnimated:(duration>0)];
 	}
 	
+	NSMutableDictionary *notificationObject = [[NSMutableDictionary alloc] init];
+	if(toController){
+		[notificationObject setObject:toController forKey:@"toController"];
+	}
+	if(fromController){
+		[notificationObject setObject:fromController forKey:@"fromController"];
+	}
+	[notificationObject setObject:self forKey:@"viewStack"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationWillPop object:notificationObject];
+	
 	//trigger animation, moving popped off to right, next view controller in from the left
 	[UIView animateWithDuration:duration delay:0 options:options animations:^{
 		
@@ -164,6 +188,8 @@
 		if([toController respondsToSelector:@selector(viewStack:didShowView:wasAnimated:)]) {
 			[toControllerUpdating viewStack:self didShowView:UIViewControllerStackOperationPop wasAnimated:(duration>0)];
 		}
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationDidPop object:notificationObject];
 	}];
 }
 
