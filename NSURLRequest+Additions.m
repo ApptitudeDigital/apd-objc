@@ -7,7 +7,7 @@
 	return TRUE;
 }
 
-+ (NSMutableURLRequest *) fileUploadRequestWithURL:(NSURL *) url data:(NSData *) data fileName:(NSString *) fileName variables:(NSDictionary *) variables {
++ (NSMutableURLRequest *) fileUploadRequestWithURL:(NSURL *) url data:(NSData *) data fileKey:(NSString *) fileKey fileName:(NSString *) fileName variables:(NSDictionary *) variables {
 	NSMutableData * postData = [NSMutableData data];
 	
 	NSMutableURLRequest * urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -19,7 +19,7 @@
 	
 	if(data) {
 		[postData appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
-		[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"media\"; filename=\"%@\"\r\n",fileName] dataUsingEncoding:NSUTF8StringEncoding]];
+		[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fileKey, fileName] dataUsingEncoding:NSUTF8StringEncoding]];
 		[postData appendData:[@"Content-Type: application/octet-stream\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
 		[postData appendData:[NSData dataWithData:data]];
 		[postData appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
