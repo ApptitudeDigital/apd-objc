@@ -1,0 +1,45 @@
+#import "APDLoadingView.h"
+
+@implementation APDLoadingView
+
+
+- (id)init{
+	self = [super init];
+	[self setup];
+	return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder{
+	self = [super initWithCoder:aDecoder];
+	[self setup];
+	return self;
+}
+
+- (id)initWithFrame:(CGRect)frame{
+	self = [super initWithFrame:frame];
+	[self setup];
+	return self;
+}
+
+- (void)setup{
+	_activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+	_activityIndicator.translatesAutoresizingMaskIntoConstraints = NO;
+	self.backgroundColor = [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.8];
+	[self addSubview:_activityIndicator];
+	[_activityIndicator centerHorizonalByConstraintInView:self];
+	[_activityIndicator centerVerticalByConstraintInView:self];
+}
+
+- (void)start{
+	UIViewController *rootController = [[UIApplication sharedApplication] delegate].window.rootViewController;
+	[rootController.view addSubview:self];
+	[self.activityIndicator startAnimating];
+	[self matchFrameSizeOfView:rootController.view];
+}
+
+- (void)stop{
+	[self removeFromSuperview];
+	[self.activityIndicator stopAnimating];
+}
+
+@end
