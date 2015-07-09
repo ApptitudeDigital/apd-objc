@@ -6,6 +6,8 @@
 
 @property UIActivityIndicatorView *activityIndicator;
 
+@property CGFloat fadeDelay;
+
 - (void)start;
 - (void)stop;
 

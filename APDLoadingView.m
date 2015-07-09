@@ -28,6 +28,7 @@
 	[self addSubview:_activityIndicator];
 	[_activityIndicator centerHorizonalByConstraintInView:self];
 	[_activityIndicator centerVerticalByConstraintInView:self];
+	
 }
 
 - (void)start{
@@ -35,11 +36,18 @@
 	[rootController.view addSubview:self];
 	[self.activityIndicator startAnimating];
 	[self matchFrameSizeOfView:rootController.view];
+	self.alpha = 0.0;
+	[UIView animateWithDuration:0.25 delay:self.fadeDelay options:UIViewAnimationOptionCurveLinear animations:^{
+		self.alpha = 1.0;
+	} completion:^(BOOL finished) {}];
 }
 
 - (void)stop{
 	[self removeFromSuperview];
 	[self.activityIndicator stopAnimating];
+	[UIView animateWithDuration:0.25 animations:^{
+		self.alpha = 0.0;
+	}];
 }
 
 @end
