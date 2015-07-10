@@ -8,12 +8,11 @@
 }
 
 + (NSMutableURLRequest *) fileUploadRequestWithURL:(NSURL *) url data:(NSData *) data fileKey:(NSString *) fileKey fileName:(NSString *) fileName variables:(NSDictionary *) variables {
-	NSMutableData * postData = [NSMutableData data];
-	
 	NSMutableURLRequest * urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
 	[urlRequest setHTTPMethod:@"POST"];
 	
-	NSString * myboundary = @"-14737809831466499882746641449";
+	NSMutableData * postData = [NSMutableData data];
+	NSString * myboundary = @"14737809831466499882746641449";
 	NSString * contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@",myboundary];
 	[urlRequest addValue:contentType forHTTPHeaderField: @"Content-Type"];
 	
@@ -22,16 +21,13 @@
 		[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fileKey, fileName] dataUsingEncoding:NSUTF8StringEncoding]];
 		[postData appendData:[@"Content-Type: application/octet-stream\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
 		[postData appendData:[NSData dataWithData:data]];
-		[postData appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
 	}
 	
 	if(variables) {
 		for(NSString * key in variables) {
 			NSString * parameterValue = [variables objectForKey:key];
-			[postData appendData:[[NSString stringWithFormat:@"--%@\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
-			[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
-			[postData appendData:[parameterValue dataUsingEncoding:NSUTF8StringEncoding]];
-			[postData appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+			[postData appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
+			[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n%@",key,parameterValue] dataUsingEncoding:NSUTF8StringEncoding]];
 		}
 	}
 	
