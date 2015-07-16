@@ -38,4 +38,59 @@
 	return cropped;
 }
 
+- (UIImage *)resizedImageWithSize:(CGSize)size andType:(UIImageResizingType)type{
+	switch (type) {
+		case UIImageResizingTypeStretch:
+			return [self imageStretchedFromSize:size];
+			break;
+		case UIImageResizingTypeCrop:
+			return [self imageCroppedFromSize:size];
+			break;
+		case UIImageResizingTypeFit:
+			return [self imageCroppedFromSize:size];
+			break;
+	}
+	return nil;
+}
+
+- (UIImage *)imageCroppedFromSize:(CGSize)size{
+	CGFloat xPercent = size.width/self.size.width;
+	CGFloat yPercent = size.height/self.size.height;
+	CGFloat percentage = xPercent;
+	if(yPercent > xPercent){
+		percentage = yPercent;
+	}
+	CGSize finalSize = CGSizeMake(percentage * self.size.width, percentage * self.size.height);
+	CGPoint offset = CGPointMake((size.width/2) - (finalSize.width/2), (size.height/2) - (finalSize.height/2));
+	
+	UIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+	[self drawInRect:CGRectMake(offset.x, offset.y, finalSize.width, finalSize.height)];
+	UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+	return newImage;
+}
+
+- (UIImage *)imageStretchedFromSize:(CGSize)size{
+	UIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+	[self drawInRect:CGRectMake(0, 0, size.width, size.height)];
+	UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+	return newImage;
+}
+
+- (UIImage *)imageConstrainedWithinSize:(CGSize)size{
+	CGFloat xPercent = size.width/self.size.width;
+	CGFloat yPercent = size.height/self.size.height;
+	CGFloat percentage = yPercent;
+	if(yPercent > xPercent){
+		percentage = xPercent;
+	}
+	CGSize finalSize = CGSizeMake(percentage * self.size.width, percentage * self.size.height);
+	UIGraphicsBeginImageContextWithOptions(finalSize, NO, 0.0);
+	[self drawInRect:CGRectMake(0.0, 0.0, finalSize.width, finalSize.height)];
+	UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+	return newImage;
+}
+
 @end
