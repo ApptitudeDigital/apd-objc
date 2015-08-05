@@ -29,7 +29,7 @@
 #endif
 
 //standard google analytics tracking
-+ (void) initializeGoogleAnalyticsWithKey:(NSString *) key; //call this before using standard any tracking methods.
++ (void) initializeGoogleAnalyticsWithKey:(NSString *) key allowIDFACollection:(BOOL) allowIDFACollection; //call this before using standard any tracking methods.
 + (void) startSession; //call this in applicationDidBecomeActive:
 + (void) endSession;   //call this in applicationWillTerminate:
 + (void) trackScreen:(NSString *) screen;

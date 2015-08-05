@@ -46,13 +46,16 @@ static BOOL _sessionStarted = FALSE;
 	return _instance;
 }
 
-+ (void) initializeGoogleAnalyticsWithKey:(NSString *) key {
++ (void) initializeGoogleAnalyticsWithKey:(NSString *) key allowIDFACollection:(BOOL) allowIDFACollection {
+	if(!key || key.length < 1) {
+		return;
+	}
 	[GAI sharedInstance].trackUncaughtExceptions = NO;
 	[GAI sharedInstance].dispatchInterval = 20;
 	[[[GAI sharedInstance] logger] setLogLevel:kGAILogLevelError];
 	[[GAI sharedInstance] trackerWithTrackingId:key];
 	_tracker = [[GAI sharedInstance] defaultTracker];
-	_tracker.allowIDFACollection = YES;
+	_tracker.allowIDFACollection = allowIDFACollection;
 }
 
 //http://stackoverflow.com/questions/18855490/session-control-with-google-analytics-api-v3-for-ios
