@@ -4,8 +4,7 @@
 static id <GAITracker> _tracker;
 static BOOL _sessionStarted = FALSE;
 
-#ifdef GATracking_GATagManager
-@interface GATracking : NSObject <TAGLogger>
+@interface GATrackingLogger : NSObject <TAGLogger>
 @property TAGLoggerLogLevelType logLevel;
 - (void) error:(NSString *) message;
 - (void) warning:(NSString *) message;
@@ -13,7 +12,7 @@ static BOOL _sessionStarted = FALSE;
 - (void) debug:(NSString *) message;
 - (void) verbose:(NSString *) message;
 @end
-@implementation GATracking
+@implementation GATrackingLogger
 - (void)error:(NSString *)message {
 	NSLog(@"Error: %@", message);
 }
@@ -30,7 +29,6 @@ static BOOL _sessionStarted = FALSE;
 	NSLog(@"Verbose: %@", message);
 }
 @end
-#endif
 
 @interface GATracking ()
 @property NSMutableArray * delayedCalls;
@@ -91,10 +89,9 @@ static BOOL _sessionStarted = FALSE;
 	[GATracking trackEventWithCategory:category action:action label:label andValue:0];
 }
 
-#ifdef GATracking_GATagManager
 - (void) initTagManagerWithID:(NSString *) tagManagerId; {
 	[TAGContainerOpener openContainerWithId:tagManagerId tagManager:[TAGManager instance] openType:kTAGOpenTypePreferFresh timeout:nil notifier:self];
-	[TAGManager instance].logger = [[TAGManagerDebug alloc] init];
+	[TAGManager instance].logger = [[GATrackingLogger alloc] init];
 	[[TAGManager instance].logger setLogLevel:kTAGLoggerLogLevelInfo];
 	[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(refreshContainer:) userInfo:nil repeats:TRUE];
 	self.delayedCalls = [NSMutableArray array];
@@ -143,7 +140,5 @@ static BOOL _sessionStarted = FALSE;
 - (void) trackScreenWithTagManager:(NSString *) screenName; {
 	[self trackEventWithTagManager:@"openScreen" parameters:@{@"screenName":screenName}];
 }
-
-#endif
 
 @end
