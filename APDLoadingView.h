@@ -5,8 +5,8 @@
 @interface APDLoadingView : UIView
 
 @property UIActivityIndicatorView *activityIndicator;
-
 @property CGFloat fadeDelay;
+@property UIView *containerView;
 
 - (void)start;
 - (void)stop;

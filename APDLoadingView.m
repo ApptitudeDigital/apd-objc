@@ -32,10 +32,13 @@
 }
 
 - (void)start{
-	UIViewController *rootController = [[UIApplication sharedApplication] delegate].window.rootViewController;
-	[rootController.view addSubview:self];
+	UIView *hostView = self.containerView;
+	if(!hostView){
+		hostView = [[UIApplication sharedApplication] delegate].window.rootViewController.view;
+	}
+	[hostView addSubview:self];
 	[self.activityIndicator startAnimating];
-	[self matchFrameSizeOfView:rootController.view];
+	[self matchFrameSizeOfView:hostView];
 	self.alpha = 0.0;
 	[UIView animateWithDuration:0.25 delay:self.fadeDelay options:UIViewAnimationOptionCurveLinear animations:^{
 		self.alpha = 1.0;
