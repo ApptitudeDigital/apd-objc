@@ -30,8 +30,8 @@
 
 //standard google analytics tracking
 + (void) initializeGoogleAnalyticsWithKey:(NSString *) key; //call this before using standard any tracking methods.
-+ (void) startSession;
-+ (void) endSession;
++ (void) startSession; //call this in applicationDidBecomeActive:
++ (void) endSession;   //call this in applicationWillTerminate:
 + (void) trackScreen:(NSString *) screen;
 + (void) trackEventWithCategory:(NSString *) category action:(NSString *) action label:(NSString *) label;
 + (void) trackEventWithCategory:(NSString *) category action:(NSString *) action label:(NSString *) label andValue:(NSInteger) val;
