@@ -125,9 +125,9 @@ static BOOL _sessionStarted = FALSE;
 }
 
 - (void) trackEventWithTagManager:(NSString *) event parameters:(NSDictionary *) parameters; {
-	NSLog(@"trackEventWithTagManager: %@ - %@",event,parameters);
 	NSMutableDictionary * combined = [NSMutableDictionary dictionaryWithDictionary:parameters];
 	combined[@"event"] = event;
+	NSLog(@"trackEventWithTagManager: %@",combined);
 	TAGDataLayer * dataLayer = [TAGManager instance].dataLayer;
 	if(!self.container) {
 		[[self delayedCalls] addObject:combined];
