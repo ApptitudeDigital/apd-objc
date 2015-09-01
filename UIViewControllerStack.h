@@ -8,6 +8,11 @@ typedef NS_ENUM(NSInteger,UIViewControllerStackOperation) {
 	UIViewControllerStackOperationPop
 };
 
+#define UIViewControllerStackNotificationWillPush @"UIViewControllerStackNotificationWillPush"
+#define UIViewControllerStackNotificationDidPush @"UIViewControllerStackNotificationDidPush"
+#define UIViewControllerStackNotificationWillPop @"UIViewControllerStackNotificationWillPop"
+#define UIViewControllerStackNotificationDidPop @"UIViewControllerStackNotificationDidPop"
+
 @protocol UIViewControllerStackUpdating <NSObject>
 @optional
 - (void) viewStack:(UIViewControllerStack *) viewStack willShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;

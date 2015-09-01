@@ -36,7 +36,7 @@
 }
 
 - (void)defaults{
-	self.stopAtFrame = 0;
+	self.stopAtFrame = -1;
 	self.fileDirectory = [[NSBundle mainBundle] bundleURL];
 	self.fps = 24.0;
 }
@@ -140,6 +140,10 @@
 	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerStopped:)]) {
 		[self.delegate sequencePlayerStopped:self];
 	}
+}
+
+- (void)seekToFrame:(CGFloat)frame{
+    self.position = frame/self.fps;
 }
 
 - (void)onTimerTick:(NSTimer *)timer{

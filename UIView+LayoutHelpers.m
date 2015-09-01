@@ -195,4 +195,9 @@
 	self.y = floorf( CGRectGetMinY(rect) +  ((CGRectGetHeight(rect) - self.height) / 2) );
 }
 
+- (void) matchFrameSizeOfView:(UIView *)view{
+	self.width = view.width;
+	self.height = view.height;
+}
+
 @end
