@@ -99,9 +99,13 @@
 	self.image = image;
 }
 
-- (void) playToFrame:(float) frame {
+- (void) playToFrame:(CGFloat) frame {
 	self.stopAtFrame = frame;
 	[self play];
+}
+
+- (void)seekToFrame:(CGFloat)frame{
+	self.position = frame/self.fps;
 }
 
 - (void)play{
