@@ -24,8 +24,13 @@
 //TagManager methods. These require using [GATracking instance];
 @property TAGContainer * container;
 + (GATracking *) instance;
++ (GATracking *) tagManager;
 - (void) initTagManagerWithID:(NSString *) tagManagerId;
+- (void) trackScreen:(NSString *) screenName;
 - (void) trackScreenWithTagManager:(NSString *) screenName;
+- (void) trackEvent:(NSString *) event parameters:(NSDictionary *) parameters;
 - (void) trackEventWithTagManager:(NSString *) event parameters:(NSDictionary *) parameters;
+- (void) trackEvent:(NSString *) event withCategory:(NSString *) category action:(NSString *) action label:(NSString *) label andValue:(NSString *) value;
+- (void) setLogLevel:(TAGLoggerLogLevelType) logLevel;
 
 @end

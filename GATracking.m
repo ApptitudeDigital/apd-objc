@@ -44,6 +44,10 @@ static BOOL _sessionStarted = FALSE;
 	return _instance;
 }
 
++ (GATracking *) tagManager {
+	return [GATracking instance];
+}
+
 + (void) initializeGoogleAnalyticsWithKey:(NSString *) key allowIDFACollection:(BOOL) allowIDFACollection {
 	if(!key || key.length < 1) {
 		return;
@@ -97,6 +101,17 @@ static BOOL _sessionStarted = FALSE;
 	self.delayedCalls = [NSMutableArray array];
 }
 
+- (void) setLogLevel:(TAGLoggerLogLevelType) logLevel; {
+	if(logLevel == kTAGLoggerLogLevelNone) {
+		[TAGManager instance].logger = nil;
+	} else {
+		if(![TAGManager instance].logger) {
+			[TAGManager instance].logger = [[GATrackingLogger alloc] init];
+		}
+		[[TAGManager instance].logger setLogLevel:logLevel];
+	}
+}
+
 - (void) refreshContainer:(NSTimer *)timer {
 	if(self.container) {
 		[self.container refresh];
@@ -125,6 +140,10 @@ static BOOL _sessionStarted = FALSE;
 }
 
 - (void) trackEventWithTagManager:(NSString *) event parameters:(NSDictionary *) parameters; {
+	[self trackEvent:event parameters:parameters];
+}
+
+- (void) trackEvent:(NSString *)event parameters:(NSDictionary *)parameters {
 	NSMutableDictionary * combined = [NSMutableDictionary dictionaryWithDictionary:parameters];
 	combined[@"event"] = event;
 	NSLog(@"trackEventWithTagManager: %@",combined);
@@ -137,7 +156,37 @@ static BOOL _sessionStarted = FALSE;
 	[dataLayer push:combined];
 }
 
+- (void) trackEvent:(NSString *) event withCategory:(NSString *) category action:(NSString *) action label:(NSString *) label andValue:(NSString *) value {
+	NSAssert(event != nil, @"Event must not be blank");
+	NSAssert(category != nil, @"Category must not be blank");
+	NSAssert(action != nil, @"Action must not be blank");
+	
+	NSMutableDictionary * params = [[NSMutableDictionary alloc] initWithCapacity:5];
+	
+	if(category) {
+		[params setValue:category forKey:@"eventCategory"];
+	}
+	
+	if(action) {
+		[params setValue:action forKey:@"eventAction"];
+	}
+	
+	if(label) {
+		[params setValue:label forKey:@"eventLabel"];
+	}
+	
+	if(value) {
+		[params setValue:value forKey:@"eventValue"];
+	}
+	
+	[self trackEventWithTagManager:event parameters:params];
+}
+
 - (void) trackScreenWithTagManager:(NSString *) screenName; {
+	[self trackScreen:screenName];
+}
+
+- (void) trackScreen:(NSString *) screenName; {
 	[self trackEventWithTagManager:@"openScreen" parameters:@{@"screenName":screenName}];
 }
 
