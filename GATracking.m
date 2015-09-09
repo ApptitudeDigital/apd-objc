@@ -182,6 +182,16 @@ static BOOL _sessionStarted = FALSE;
 	[self trackEventWithTagManager:event parameters:params];
 }
 
+- (void) pushCustomData:(NSDictionary *) data; {
+	if(!self.container) {
+		[[self delayedCalls] addObject:data];
+		return;
+	}
+	[self sendDelayedCalls];
+	TAGDataLayer * dataLayer = [TAGManager instance].dataLayer;
+	[dataLayer push:data];
+}
+
 - (void) trackScreenWithTagManager:(NSString *) screenName; {
 	[self trackScreen:screenName];
 }

@@ -31,6 +31,7 @@
 - (void) trackEvent:(NSString *) event parameters:(NSDictionary *) parameters;
 - (void) trackEventWithTagManager:(NSString *) event parameters:(NSDictionary *) parameters;
 - (void) trackEvent:(NSString *) event withCategory:(NSString *) category action:(NSString *) action label:(NSString *) label andValue:(NSString *) value;
+- (void) pushCustomData:(NSDictionary *) data;
 - (void) setLogLevel:(TAGLoggerLogLevelType) logLevel;
 
 @end
