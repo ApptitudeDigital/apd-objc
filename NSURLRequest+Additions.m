@@ -23,12 +23,14 @@
 		[postData appendData:[NSData dataWithData:data]];
 	}
 	
-	if(variables) {
+	if(variables.count > 0) {
 		for(NSString * key in variables) {
 			NSString * parameterValue = [variables objectForKey:key];
 			[postData appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
 			[postData appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n%@",key,parameterValue] dataUsingEncoding:NSUTF8StringEncoding]];
 		}
+	} else {
+		[postData appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",myboundary] dataUsingEncoding:NSUTF8StringEncoding]];
 	}
 	
 	NSString * postLength = [NSString stringWithFormat:@"%lu",(unsigned long)postData.length];
