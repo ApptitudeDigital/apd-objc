@@ -19,7 +19,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 @implementation FTPSyncChilkat
 
-- (id) initWithFTPKey:(NSString *) key host:(NSString *) host port:(NSUInteger) port secure:(BOOL) secure username:(NSString *) username password:(NSString *) password {
+- (id) initWithChilkatFTPKey:(NSString *) key host:(NSString *) host port:(NSUInteger) port secure:(BOOL) secure username:(NSString *) username password:(NSString *) password {
 	self = [super init];
 	self.allowItunesBackup = TRUE;
 	
