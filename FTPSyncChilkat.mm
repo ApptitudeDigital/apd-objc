@@ -3,6 +3,7 @@
 #import "CkoFtp2.h"
 #import "CkoTask.h"
 
+NSString * const FTPSyncChilkatStarted = @"FTPSyncChilkatStarted";
 NSString * const FTPSyncChilkatCompleted = @"FTPSyncChilkatCompleted";
 NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
@@ -26,7 +27,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	self.chilkatFTP = [[CkoFtp2 alloc] init];
 	if([self.chilkatFTP UnlockComponent:key] != TRUE) {
 		NSLog(@"Chilkat key: (%@) failed to unlock",key);
-		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 		return nil;
 	}
 	
@@ -69,7 +70,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 - (void) startMonitor {
 	[self stopMonitor];
-	self.taskMonitor = [NSTimer scheduledTimerWithTimeInterval:.2 target:self selector:@selector(checkTask:) userInfo:nil repeats:TRUE];
+	self.taskMonitor = [NSTimer scheduledTimerWithTimeInterval:.5 target:self selector:@selector(checkTask:) userInfo:nil repeats:TRUE];
 }
 
 - (void) checkTask:(NSTimer *) timer {
@@ -80,14 +81,14 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	if(self.currentTask.Finished) {
 		if(self.currentTask.StatusInt.integerValue != 7) {
 			NSLog(@"StatusInt != 7 (%@, secure:%i) failed",self.currentTaskName,self.secure);
-			[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+			[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 			[self stopMonitor];
 			return;
 		}
 		
 		if([self.currentTask GetResultBool] != TRUE) {
 			NSLog(@"GetResultBool failed (%@, secure: %i) failed",self.currentTaskName,self.secure);
-			[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+			[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 			[self stopMonitor];
 			return;
 		}
@@ -118,7 +119,8 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 - (void) completed {
 	NSLog(@"Chilkat FTP Sync Completed");
-	[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatCompleted object:nil];
+	[self.chilkatFTP Disconnect];
+	[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatCompleted object:self];
 	[self stopMonitor];
 	if(!self.allowItunesBackup) {
 		[self.localDir setResourceValue:@(1) forKey:NSURLIsExcludedFromBackupKey error:nil];
@@ -130,7 +132,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	self.currentTaskName = @"ConnectAsync";
 	if([self.currentTask Run] != TRUE) {
 		NSLog(@"Chilkat ConnectAsync failed");
-		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 		return;
 	}
 	[self startMonitor];
@@ -142,7 +144,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	if([self.currentTask Run] != TRUE) {
 		[self.chilkatFTP Disconnect];
 		NSLog(@"Chilkat ChangeRemoteDir (%@) failed",self.remoteDir.path);
-		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 		return;
 	}
 	[self startMonitor];
@@ -154,9 +156,10 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	if([self.currentTask Run] != YES) {
 		[self.chilkatFTP Disconnect];
 		NSLog(@"Chilkat SyncLocalTreeAsync (%@) failed",self.localDir.path);
-		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
 		return;
 	}
+	[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatStarted object:self];
 	[self startMonitor];
 }
 

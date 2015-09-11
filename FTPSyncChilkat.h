@@ -1,6 +1,7 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString * const FTPSyncChilkatStarted;
 extern NSString * const FTPSyncChilkatCompleted;
 extern NSString * const FTPSyncChilkatFailed;
 
