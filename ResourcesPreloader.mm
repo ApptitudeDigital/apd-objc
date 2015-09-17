@@ -206,6 +206,7 @@
 	if(unzipCount < 0) {
 		self.bytesDownloaded = 0;
 		self.expectedSize = 0;
+		[zip CloseZip];
 		[self performSelectorOnMainThread:@selector(sendUnzipFailed) withObject:nil waitUntilDone:FALSE];
 		[self performSelectorOnMainThread:@selector(save) withObject:nil waitUntilDone:FALSE];
 		NSLog(@"error unzipping");
