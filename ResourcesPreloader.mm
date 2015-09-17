@@ -138,16 +138,11 @@
 - (void) connection:(NSURLConnection *) connection didReceiveData:(NSData *) data {
 	[self.resourcesFile writeData:data];
 	self.bytesDownloaded += data.length;
-	
 	float progress = (float) ( (float) [self bytesDownloaded] / self.expectedSize) / 2;
-	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloader:progress:)]) {
-		[self.delegate resourcesPreloader:self progress:progress];
-	}
-	
+	[self sendProgress:@(progress)];
 	[self save];
 }
 
-static bool test_redownload = TRUE;
 - (void) connection:(NSURLConnection *) connection didReceiveResponse:(NSURLResponse *) response {
 	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 	NSDictionary * headers = httpResponse.allHeaderFields;
@@ -160,9 +155,8 @@ static bool test_redownload = TRUE;
 		
 		//if server modified date is greater than the original modified date the file needs to be re-downloaded.
 		NSDate * modifiedDate = [dateFormatter dateFromString:modified];
-		if(test_redownload || [modifiedDate timeIntervalSinceDate:self.lastModified] > 0) {
+		if([modifiedDate timeIntervalSinceDate:self.lastModified] > 0) {
 			NSLog(@"File was modified, redownloading entire file.");
-			test_redownload = FALSE;
 			[self cancel];
 			[self resume];
 			return;
@@ -220,15 +214,20 @@ static bool test_redownload = TRUE;
 
 - (void) zipComplete {
 	[[NSFileManager defaultManager] removeItemAtURL:self.localZipURL error:nil];
-	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloaderUnzipFailed:)]) {
+	[[NSFileManager defaultManager] removeItemAtURL:[self serializedDataURL] error:nil];
+	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloaderCompleted:)]) {
 		[self.delegate resourcesPreloaderCompleted:self];
 	}
 }
 
 - (void) PercentDone:(NSNumber *) pctDone {
 	float progress = .5 + ((pctDone.floatValue/100)/2);
+	[self performSelectorOnMainThread:@selector(sendProgress:) withObject:@(progress) waitUntilDone:FALSE];
+}
+
+- (void) sendProgress:(NSNumber *) progress {
 	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloader:progress:)]) {
-		[self.delegate resourcesPreloader:self progress:progress];
+		[self.delegate resourcesPreloader:self progress:progress.floatValue];
 	}
 }
 
