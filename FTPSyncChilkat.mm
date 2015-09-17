@@ -9,8 +9,13 @@ NSString * const FTPSyncChilkatCompleted = @"FTPSyncChilkatCompleted";
 NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 @interface FTPSyncChilkat ()
-@property BOOL secure;
+@property NSString * chilkatFTPKey;
+@property NSString * host;
+@property NSString * username;
+@property NSString * password;
 @property NSUInteger syncMode;
+@property NSInteger port;
+@property BOOL secure;
 @property NSURL * remoteDir;
 @property NSURL * localDir;
 @property CkoFtp2 * chilkatFTP;
@@ -21,31 +26,41 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 @implementation FTPSyncChilkat
 
+- (id) initWithCoder:(NSCoder *)aDecoder {
+	self = [super init];
+	NSKeyedUnarchiver * coder = (NSKeyedUnarchiver *)aDecoder;
+	self.syncMode = [coder decodeIntegerForKey:@"syncMode"];
+	self.remoteDir = [coder decodeObjectForKey:@"remoteDir"];
+	self.localDir = [coder decodeObjectForKey:@"localDir"];
+	self.host = [coder decodeObjectForKey:@"host"];
+	self.username = [coder decodeObjectForKey:@"username"];
+	self.password = [coder decodeObjectForKey:@"password"];
+	self.port = [coder decodeIntegerForKey:@"port"];
+	self.secure = [coder decodeBoolForKey:@"secure"];
+	return self;
+}
+
+- (void) encodeWithCoder:(NSCoder *)aCoder {
+	NSKeyedArchiver * coder = (NSKeyedArchiver *)aCoder;
+	[coder encodeInteger:self.syncMode forKey:@"syncMode"];
+	[coder encodeObject:self.remoteDir forKey:@"remoteDir"];
+	[coder encodeObject:self.localDir forKey:@"localDir"];
+	[coder encodeObject:self.host forKey:@"host"];
+	[coder encodeObject:self.username forKey:@"username"];
+	[coder encodeObject:self.password forKey:@"password"];
+	[coder encodeInteger:self.port forKey:@"port"];
+	[coder encodeBool:self.secure forKey:@"secure"];
+}
+
 - (id) initWithChilkatFTPKey:(NSString *) key host:(NSString *) host port:(NSUInteger) port secure:(BOOL) secure username:(NSString *) username password:(NSString *) password {
 	self = [super init];
+	self.chilkatFTPKey = key;
 	self.allowItunesBackup = TRUE;
-	
-	//unlock
-	self.chilkatFTP = [[CkoFtp2 alloc] init];
-	if([self.chilkatFTP UnlockComponent:key] != TRUE) {
-		NSLog(@"Chilkat key: (%@) failed to unlock",key);
-		[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
-		return nil;
-	}
-	
-	self.chilkatFTP.Hostname = host;
-	self.chilkatFTP.Username = username;
-	self.chilkatFTP.Password = password;
-	self.chilkatFTP.Port = @(port);
-	self.secure = secure;
-	
-	//see SyncLocalTree for mode option docs https://www.chilkatsoft.com/refdoc/objcCkoFtp2Ref.html
+	self.host = host;
+	self.username = username;
+	self.password = password;
+	self.port = port;
 	self.syncMode = 5;
-	
-	if(secure) {
-		self.chilkatFTP.AuthTls = TRUE;
-	}
-	
 	return self;
 }
 
@@ -56,20 +71,71 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	[self.chilkatFTP Disconnect];
 }
 
+- (void) setLocalFTPDir:(NSURL *) url; {
+	if(self.currentTaskName) {
+		NSLog(@"FTPSyncChilkat is currently running, can't set local FTP dir while syncing.");
+		return;
+	}
+	self.localDir = url;
+}
+
+- (void) setRemoteFTPDir:(NSURL *) url; {
+	if(self.currentTaskName) {
+		NSLog(@"FTPSyncChilkat is currently running, can't set remote FTP dir while syncing.");
+		return;
+	}
+	self.remoteDir = url;
+}
+
 - (void) syncRemoteDirectory:(NSURL *) remoteDir toLocalDir:(NSURL *) localDir; {
 	if(self.currentTask) {
 		NSLog(@"FTPSyncChilkat instances can only sync one dir at a time. Use another instance to sync more.");
 		return;
 	}
-	NSLog(@"FTP Sync (mode: %i) Remote Dir: %@",self.syncMode,remoteDir.path);
-	NSLog(@"FTP Sync (mode: %i) Local Dir: %@",self.syncMode,localDir.path);
-	self.remoteDir = remoteDir;
-	self.localDir = localDir;
-	BOOL isdir;
-	if(![[NSFileManager defaultManager] fileExistsAtPath:localDir.path isDirectory:&isdir]) {
-		[[NSFileManager defaultManager] createDirectoryAtPath:localDir.path withIntermediateDirectories:TRUE attributes:nil error:nil];
+	
+	[self setRemoteDir:remoteDir];
+	[self setLocalDir:localDir];
+	[self syncFTP];
+}
+
+- (void) syncFTP {
+	if(!self.chilkatFTP) {
+		self.chilkatFTP = [[CkoFtp2 alloc] init];
+		if([self.chilkatFTP UnlockComponent:self.chilkatFTPKey] != TRUE) {
+			NSLog(@"Chilkat key: (%@) failed to unlock",self.chilkatFTPKey);
+			[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatFailed object:self];
+			return;
+		}
+		
+		self.chilkatFTP.Hostname = self.host;
+		self.chilkatFTP.Username = self.username;
+		self.chilkatFTP.Password = self.password;
+		self.chilkatFTP.Port = @(self.port);
+		self.secure = self.secure;
+		
+		//see SyncLocalTree for mode option docs https://www.chilkatsoft.com/refdoc/objcCkoFtp2Ref.html
+		self.syncMode = self.syncMode;
+		
+		if(self.secure) {
+			self.chilkatFTP.AuthTls = TRUE;
+		}
 	}
-	[self connect];
+	
+	NSLog(@"FTP Sync (mode: %i) Remote Dir: %@",self.syncMode,self.remoteDir.path);
+	NSLog(@"FTP Sync (mode: %i) Local Dir: %@",self.syncMode,self.localDir.path);
+	
+	//create dir if needed
+	BOOL isdir;
+	if(![[NSFileManager defaultManager] fileExistsAtPath:self.localDir.path isDirectory:&isdir]) {
+		[[NSFileManager defaultManager] createDirectoryAtPath:self.localDir.path withIntermediateDirectories:TRUE attributes:nil error:nil];
+	}
+	
+	//kick off the ftp process.
+	if(![self.chilkatFTP IsConnected]) {
+		[self connect];
+	} else {
+		[self changeDir];
+	}
 }
 
 - (void) syncRemoteDirectory:(NSURL *) remoteDir toLocalDir:(NSURL *) localDir withSyncMode:(NSUInteger) mode; {
