@@ -113,7 +113,7 @@
 	
 	//check if local file is complete first.
 	if([fileManager fileExistsAtPath:self.localZipURL.path]) {
-		if(self.bytesDownloaded >= self.expectedSize) {
+		if(self.expectedSize > 0 && self.bytesDownloaded >= self.expectedSize) {
 			[self unzip];
 			return;
 		}
@@ -125,7 +125,6 @@
 	//setup request for download
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:self.remoteZipURL];
 	if(self.bytesDownloaded > 0) {
-		[self.resourcesFile seekToFileOffset:self.bytesDownloaded];
 		NSString * range = [NSString stringWithFormat:@"bytes=%llu-",self.bytesDownloaded];
 		[request setValue:range forHTTPHeaderField:@"Range"];
 	}
