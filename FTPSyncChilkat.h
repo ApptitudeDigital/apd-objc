@@ -21,6 +21,9 @@ extern NSString * const FTPSyncChilkatFailed;
 //use the delegate if you don't want to use notifications.
 @property NSObject <FTPSyncChilkatDelegate> * delegate;
 
+//the files synced. available after it completes syncing.
+@property NSArray * syncedFiles;
+
 //if false after a sync completes the localDir will be set as do not backup.
 //defaults to true.
 @property BOOL allowItunesBackup;

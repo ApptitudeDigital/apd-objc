@@ -92,10 +92,18 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 		NSLog(@"FTPSyncChilkat instances can only sync one dir at a time. Use another instance to sync more.");
 		return;
 	}
-	
 	[self setRemoteDir:remoteDir];
 	[self setLocalDir:localDir];
 	[self syncFTP];
+}
+
+- (void) syncRemoteDirectory:(NSURL *) remoteDir toLocalDir:(NSURL *) localDir withSyncMode:(NSUInteger) mode; {
+	if(self.currentTask) {
+		NSLog(@"FTPSyncChilkat instances can only sync one dir at a time. Use another instance to sync more.");
+		return;
+	}
+	self.syncMode = mode;
+	[self syncRemoteDirectory:remoteDir toLocalDir:localDir];
 }
 
 - (void) syncFTP {
@@ -136,15 +144,6 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	} else {
 		[self changeDir];
 	}
-}
-
-- (void) syncRemoteDirectory:(NSURL *) remoteDir toLocalDir:(NSURL *) localDir withSyncMode:(NSUInteger) mode; {
-	if(self.currentTask) {
-		NSLog(@"FTPSyncChilkat instances can only sync one dir at a time. Use another instance to sync more.");
-		return;
-	}
-	self.syncMode = mode;
-	[self syncRemoteDirectory:remoteDir toLocalDir:localDir];
 }
 
 - (void) stopMonitor {
@@ -218,13 +217,22 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 - (void) completed {
 	NSLog(@"Chilkat FTP Sync Completed");
+	
+	self.syncedFiles = [[self.chilkatFTP SyncedFiles] componentsSeparatedByString:@"\n"];
+	if(self.syncedFiles.count == 1 && [[self.syncedFiles objectAtIndex:0] isEqualToString:@""]) {
+		self.syncedFiles = [NSArray array];
+	}
+	
 	[self.chilkatFTP Disconnect];
+	
 	[[NSNotificationCenter defaultCenter] postNotificationName:FTPSyncChilkatCompleted object:self];
 	if(self.delegate && [self.delegate respondsToSelector:@selector(ftpSyncChilkatDidComplete:)]) {
 		[self.delegate ftpSyncChilkatDidComplete:self];
 	}
+	
 	[self stopMonitor];
 	[self clearCurrentTask];
+	
 	if(!self.allowItunesBackup) {
 		[self.localDir setResourceValue:@(1) forKey:NSURLIsExcludedFromBackupKey error:nil];
 	}
