@@ -129,8 +129,8 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 		}
 	}
 	
-	NSLog(@"FTP Sync (mode: %i) Remote Dir: %@",self.syncMode,self.remoteDir.path);
-	NSLog(@"FTP Sync (mode: %i) Local Dir: %@",self.syncMode,self.localDir.path);
+	NSLog(@"FTP Sync (mode: %i) Remote Dir: %@",(int)self.syncMode,self.remoteDir.path);
+	NSLog(@"FTP Sync (mode: %i) Local Dir: %@",(int)self.syncMode,self.localDir.path);
 	
 	//create dir if needed
 	BOOL isdir;
