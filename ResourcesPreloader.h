@@ -40,4 +40,7 @@
 //stop download and deletes zip file.
 - (void) cancel;
 
+//deletes the zip file. The zip is automatically deleted after download/unzip is completed.
+- (void) deleteZipFile;
+
 @end

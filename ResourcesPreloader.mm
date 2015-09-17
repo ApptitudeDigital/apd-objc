@@ -204,6 +204,9 @@
 	NSURL * unzipPath = [self.localZipURL URLByDeletingLastPathComponent];
 	int unzipCount = [[zip Unzip:unzipPath.path] intValue];
 	if(unzipCount < 0) {
+		self.bytesDownloaded = 0;
+		self.expectedSize = 0;
+		[self performSelectorOnMainThread:@selector(sendUnzipFailed) withObject:nil waitUntilDone:FALSE];
 		NSLog(@"error unzipping");
 		return;
 	}
@@ -225,10 +228,21 @@
 	[self performSelectorOnMainThread:@selector(sendProgress:) withObject:@(progress) waitUntilDone:FALSE];
 }
 
+- (void) sendUnzipFailed {
+	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloaderUnzipFailed:)]) {
+		[self.delegate resourcesPreloaderUnzipFailed:self];
+	}
+}
+
 - (void) sendProgress:(NSNumber *) progress {
 	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloader:progress:)]) {
 		[self.delegate resourcesPreloader:self progress:progress.floatValue];
 	}
+}
+
+- (void) deleteZipFile; {
+	[[NSFileManager defaultManager] removeItemAtURL:self.localZipURL error:nil];
+	[[NSFileManager defaultManager] removeItemAtURL:[self serializedDataURL] error:nil];
 }
 
 @end
