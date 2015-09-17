@@ -182,6 +182,7 @@
 	NSLog(@"connection did finish loading");
 	self.bytesDownloaded = 0;
 	self.expectedSize = 0;
+	[self save];
 	[self performSelectorInBackground:@selector(unzip) withObject:nil];
 }
 
@@ -207,6 +208,7 @@
 		self.bytesDownloaded = 0;
 		self.expectedSize = 0;
 		[self performSelectorOnMainThread:@selector(sendUnzipFailed) withObject:nil waitUntilDone:FALSE];
+		[self performSelectorOnMainThread:@selector(save) withObject:nil waitUntilDone:FALSE];
 		NSLog(@"error unzipping");
 		return;
 	}
