@@ -25,6 +25,8 @@
 @property NSURL * remoteZipURL;
 @property NSURL * localZipURL;
 
+@property BOOL alwaysReload;
+
 //check if a preloader can be restored
 + (BOOL) canRestorePreloaderForLocalZipFile:(NSURL *) url;
 

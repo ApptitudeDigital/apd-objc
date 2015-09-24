@@ -53,6 +53,7 @@
 	self.lastModified = [coder decodeObjectForKey:@"lastModified"];
 	self.remoteZipURL = [coder decodeObjectForKey:@"remoteZipURL"];
 	self.chilkatKey = [coder decodeObjectForKey:@"chilkatKey"];
+	self.alwaysReload = [coder decodeBoolForKey:@"alwaysReload"];
 	return self;
 }
 
@@ -63,6 +64,7 @@
 	[coder encodeObject:self.lastModified forKey:@"lastModified"];
 	[coder encodeObject:self.remoteZipURL forKey:@"remoteZipURL"];
 	[coder encodeObject:self.chilkatKey forKey:@"chilkatKey"];
+	[coder encodeBool:self.alwaysReload forKey:@"alwaysReload"];
 }
 
 - (void) cancel; {
@@ -119,14 +121,25 @@
 		}
 	}
 	
+	//if always reload, first delete the file.
+	if(self.alwaysReload) {
+		[fileManager removeItemAtPath:self.localZipURL.path error:nil];
+	}
+	
 	//make local file to download to.
 	[self createLocalResourcesFile];
 	
 	//setup request for download
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:self.remoteZipURL];
-	if(self.bytesDownloaded > 0) {
+	if(self.bytesDownloaded > 0 && !self.alwaysReload) {
 		NSString * range = [NSString stringWithFormat:@"bytes=%llu-",self.bytesDownloaded];
 		[request setValue:range forHTTPHeaderField:@"Range"];
+	}
+	
+	//if always reload, reset internal vars.
+	if(self.alwaysReload) {
+		self.bytesDownloaded = 0;
+		self.expectedSize = 0;
 	}
 	
 	//start download
