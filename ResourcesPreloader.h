@@ -1,5 +1,5 @@
 
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import "FTPSyncChilkat.h"
 
 @class ResourcesPreloader;
@@ -12,7 +12,7 @@
 @optional
 - (void) resourcesPreloader:(ResourcesPreloader *) preloader progress:(float) progress;
 - (void) resourcesPreloaderCompleted:(ResourcesPreloader *) preloader;
-- (void) resourcesPreloaderZipDownloadFailed:(ResourcesPreloader *) preloader;
+- (void) resourcesPreloader:(ResourcesPreloader *) preloader zipDownloadFailedWithError:(NSError *) error;
 - (void) resourcesPreloaderUnzipFailed:(ResourcesPreloader *) preloader;
 @end
 

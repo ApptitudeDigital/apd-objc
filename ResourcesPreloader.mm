@@ -184,9 +184,9 @@
 	[self save];
 }
 
-- (void) connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloaderZipDownloadFailed:)]) {
-		[self.delegate resourcesPreloaderZipDownloadFailed:self];
+- (void) connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {	
+	if(self.delegate && [self.delegate respondsToSelector:@selector(resourcesPreloader:zipDownloadFailedWithError:)]) {
+		[self.delegate resourcesPreloader:self zipDownloadFailedWithError:error];
 	}
 }
 
