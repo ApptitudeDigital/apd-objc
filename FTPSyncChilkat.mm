@@ -60,7 +60,8 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 	self.username = username;
 	self.password = password;
 	self.port = port;
-	self.syncMode = 5;
+	self.syncMode = 6;
+	[self debugLog:TRUE];
 	return self;
 }
 
@@ -128,6 +129,8 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 			self.chilkatFTP.AuthTls = TRUE;
 		}
 	}
+	
+	[self debugLog:TRUE];
 	
 	NSLog(@"FTP Sync (mode: %i) Remote Dir: %@",(int)self.syncMode,self.remoteDir.path);
 	NSLog(@"FTP Sync (mode: %i) Local Dir: %@",(int)self.syncMode,self.localDir.path);
@@ -202,6 +205,7 @@ NSString * const FTPSyncChilkatFailed = @"FTPSyncChilkatFailed";
 
 - (void) debugLog:(BOOL) debug; {
 	if(debug) {
+		NSLog(@"%@",[NSTemporaryDirectory() stringByAppendingString:@"chilkat-ftp.log"]);
 		self.chilkatFTP.DebugLogFilePath = [NSTemporaryDirectory() stringByAppendingString:@"chilkat-ftp.log"];
 		NSLog(@"Chilkat Debug File: %@",self.chilkatFTP.DebugLogFilePath);
 	} else {
