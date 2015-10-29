@@ -27,4 +27,14 @@
 	return s;
 }
 
+- (BOOL) isValidEmail {
+	NSString * pattern = @"^.+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*$";
+	NSRegularExpression * regex = [[NSRegularExpression alloc] initWithPattern:pattern options:0 error:nil];
+	NSArray * matches = [regex matchesInString:self options:0 range:NSMakeRange(0, self.length)];
+	if(matches.count < 1) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 @end
