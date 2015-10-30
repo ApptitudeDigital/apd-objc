@@ -37,4 +37,8 @@
 	return TRUE;
 }
 
+- (BOOL) isEmpty{
+	return [self stringByReplacingOccurrencesOfString:@" " withString:@""].length < 1;
+}
+
 @end

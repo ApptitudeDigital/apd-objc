@@ -8,5 +8,6 @@
 - (NSString *) stringByTrimmingNewlinesAndWhitespace;
 - (NSString *) stringByTrimmingWhitespace;
 - (BOOL) isValidEmail;
+- (BOOL) isEmpty;
 
 @end
