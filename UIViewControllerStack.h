@@ -8,10 +8,10 @@ typedef NS_ENUM(NSInteger,UIViewControllerStackOperation) {
 	UIViewControllerStackOperationPop
 };
 
-#define UIViewControllerStackNotificationWillPush @"UIViewControllerStackNotificationWillPush"
-#define UIViewControllerStackNotificationDidPush @"UIViewControllerStackNotificationDidPush"
-#define UIViewControllerStackNotificationWillPop @"UIViewControllerStackNotificationWillPop"
-#define UIViewControllerStackNotificationDidPop @"UIViewControllerStackNotificationDidPop"
+extern NSString * const UIViewControllerStackNotificationWillPush;
+extern NSString * const UIViewControllerStackNotificationDidPush;
+extern NSString * const UIViewControllerStackNotificationWillPop;
+extern NSString * const UIViewControllerStackNotificationDidPop;
 
 @protocol UIViewControllerStackUpdating <NSObject>
 @optional
@@ -19,15 +19,21 @@ typedef NS_ENUM(NSInteger,UIViewControllerStackOperation) {
 - (void) viewStack:(UIViewControllerStack *) viewStack willHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
+- (CGRect) viewFrameForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
 - (BOOL) shouldResizeFrameForStackPush:(UIViewControllerStack *) viewStack;
-//- (CGPoint) contentOriginInViewStack:(UIViewControllerStack *) viewStack;
 @end
 
 IB_DESIGNABLE
-@interface UIViewControllerStack : UIView
+@interface UIViewControllerStack : UIScrollView
 
+//animation duration for push/popping view controllers that slide in / out.
 @property IBInspectable CGFloat animationDuration;
+
+//this always matches width/height. UIViewControllerStackViewResizing options are ignored.
 @property IBInspectable BOOL alwaysResizePushedViews;
+
+//updates the scroll view content size after a frame resize - note this only works if you implement viewFrameForViewStackController:isScrollView:
+@property IBInspectable BOOL updateScrollViewContentSizeAfterResize;
 
 //methods for pushing/popping and altering what's displayed.
 - (void) pushViewController:(UIViewController *) viewController animated:(BOOL) animated;

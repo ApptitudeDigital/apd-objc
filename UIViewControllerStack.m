@@ -1,6 +1,10 @@
+
 #import "UIViewControllerStack.h"
 
-
+NSString * const UIViewControllerStackNotificationWillPush;
+NSString * const UIViewControllerStackNotificationDidPush;
+NSString * const UIViewControllerStackNotificationWillPop;
+NSString * const UIViewControllerStackNotificationDidPop;
 
 @interface UIViewControllerStack ()
 @property NSMutableArray * viewControllers;
@@ -11,6 +15,7 @@
 - (void) defaultInit {
 	self.viewControllers = [NSMutableArray array];
 	self.animationDuration = .25;
+	self.delaysContentTouches = FALSE;
 }
 
 - (id) initWithCoder:(NSCoder *)aDecoder {
@@ -25,11 +30,25 @@
 	return self;
 }
 
+- (void) layoutSubviews {
+	[super layoutSubviews];
+	
+	UIViewController * current = [self currentViewController];
+	if(!current) {
+		return;
+	}
+	
+	NSLog(@"layed out subviews");
+	[self resizeViewController:current];
+}
+
 - (void) resizeViewController:(UIViewController *) viewController {
 	if(!viewController) {
 		return;
 	}
 	
+	BOOL isSelfScrollView = [self isKindOfClass:[UIScrollView class]];
+	BOOL updatedFrame = FALSE;
 	CGRect f = viewController.view.frame;
 	UIViewController <UIViewControllerStackUpdating> * updating = (UIViewController <UIViewControllerStackUpdating> *) viewController;
 	
@@ -38,14 +57,28 @@
 		if(resize) {
 			f.size.width = self.frame.size.width;
 			f.size.height = self.frame.size.height;
-			viewController.view.frame = f;
+			updatedFrame = TRUE;
 		}
 	}
 	
-	if(self.alwaysResizePushedViews) {
+	if(!updatedFrame && self.alwaysResizePushedViews) {
 		f.size.width = self.frame.size.width;
 		f.size.height = self.frame.size.height;
-		viewController.view.frame = f;
+		updatedFrame = TRUE;
+	}
+	
+	if(!updatedFrame && [updating respondsToSelector:@selector(viewFrameForViewStackController:isScrollView:)]) {
+		CGRect newFrame = [updating viewFrameForViewStackController:self isScrollView:isSelfScrollView];
+		if(!CGRectEqualToRect(newFrame, CGRectZero)) {
+			f = newFrame;
+			updatedFrame = TRUE;
+		}
+	}
+	
+	viewController.view.frame = f;
+	
+	if(isSelfScrollView && self.updateScrollViewContentSizeAfterResize) {
+		self.contentSize = f.size;
 	}
 }
 
@@ -61,7 +94,7 @@
 	
 	//resize view controllers
 	[self resizeViewController:fromController];
-	[self resizeViewController:toController];
+	//[self resizeViewController:toController];
 	
 	//add subview
 	[self addSubview:toController.view];
