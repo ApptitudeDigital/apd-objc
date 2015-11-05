@@ -19,8 +19,11 @@ extern NSString * const UIViewControllerStackNotificationDidPop;
 - (void) viewStack:(UIViewControllerStack *) viewStack willHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
-- (CGRect) viewFrameForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
+- (void) viewStack:(UIViewControllerStack *) viewStack didResizeViewController:(UIViewController *) viewController;
 - (BOOL) shouldResizeFrameForStackPush:(UIViewControllerStack *) viewStack;
+- (CGRect) viewFrameForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
+- (CGFloat) minViewHeightForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
+
 @end
 
 IB_DESIGNABLE
@@ -31,9 +34,6 @@ IB_DESIGNABLE
 
 //this always matches width/height. UIViewControllerStackViewResizing options are ignored.
 @property IBInspectable BOOL alwaysResizePushedViews;
-
-//updates the scroll view content size after a frame resize - note this only works if you implement viewFrameForViewStackController:isScrollView:
-@property IBInspectable BOOL updateScrollViewContentSizeAfterResize;
 
 //methods for pushing/popping and altering what's displayed.
 - (void) pushViewController:(UIViewController *) viewController animated:(BOOL) animated;

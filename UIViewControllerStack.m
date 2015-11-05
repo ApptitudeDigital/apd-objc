@@ -52,6 +52,12 @@ NSString * const UIViewControllerStackNotificationDidPop;
 	CGRect f = viewController.view.frame;
 	UIViewController <UIViewControllerStackUpdating> * updating = (UIViewController <UIViewControllerStackUpdating> *) viewController;
 	
+	if(self.alwaysResizePushedViews) {
+		f.size.width = self.frame.size.width;
+		f.size.height = self.frame.size.height;
+		updatedFrame = TRUE;
+	}
+	
 	if([updating respondsToSelector:@selector(shouldResizeFrameForStackPush:)]) {
 		BOOL resize = [updating shouldResizeFrameForStackPush:self];
 		if(resize) {
@@ -61,13 +67,7 @@ NSString * const UIViewControllerStackNotificationDidPop;
 		}
 	}
 	
-	if(!updatedFrame && self.alwaysResizePushedViews) {
-		f.size.width = self.frame.size.width;
-		f.size.height = self.frame.size.height;
-		updatedFrame = TRUE;
-	}
-	
-	if(!updatedFrame && [updating respondsToSelector:@selector(viewFrameForViewStackController:isScrollView:)]) {
+	if([updating respondsToSelector:@selector(viewFrameForViewStackController:isScrollView:)]) {
 		CGRect newFrame = [updating viewFrameForViewStackController:self isScrollView:isSelfScrollView];
 		if(!CGRectEqualToRect(newFrame, CGRectZero)) {
 			f = newFrame;
@@ -75,9 +75,23 @@ NSString * const UIViewControllerStackNotificationDidPop;
 		}
 	}
 	
+	if([updating respondsToSelector:@selector(minViewHeightForViewStackController:isScrollView:)]) {
+		CGFloat minHeight = [updating minViewHeightForViewStackController:self isScrollView:isSelfScrollView];
+		updatedFrame = TRUE;
+		if(self.frame.size.height > minHeight) {
+			f.size.height = self.frame.size.height;
+		} else {
+			f.size.height = minHeight;
+		}
+	}
+	
 	viewController.view.frame = f;
 	
-	if(isSelfScrollView && self.updateScrollViewContentSizeAfterResize) {
+	if([updating respondsToSelector:@selector(viewStack:didResizeViewController:)]) {
+		[updating viewStack:self didResizeViewController:updating];
+	}
+	
+	if(isSelfScrollView) {
 		self.contentSize = f.size;
 	}
 }
