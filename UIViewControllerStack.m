@@ -38,7 +38,7 @@ NSString * const UIViewControllerStackNotificationDidPop;
 		return;
 	}
 	
-	NSLog(@"layed out subviews");
+	//NSLog(@"layed out subviews");
 	[self resizeViewController:current];
 }
 
@@ -108,7 +108,7 @@ NSString * const UIViewControllerStackNotificationDidPop;
 	
 	//resize view controllers
 	[self resizeViewController:fromController];
-	//[self resizeViewController:toController];
+	[self resizeViewController:toController];
 	
 	//add subview
 	[self addSubview:toController.view];
