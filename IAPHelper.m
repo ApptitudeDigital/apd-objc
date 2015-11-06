@@ -1,6 +1,8 @@
 
 #import "IAPHelper.h"
 
+#define IAPHelperNonConsumableDefaultsKey @"IAPHelperPurchasedNonConsumables"
+
 NSString * const IAPHelperDomain = @"com.apptitude.IAPHelper";
 const NSInteger IAPHelperErrorCodeProductNotFound = 1;
 const NSInteger IAPHelperErrorCodeNoProducts = 2;
@@ -16,7 +18,53 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 @implementation IAPHelper
 
-+ (NSArray *) allProductIdsFromPlist; {
++ (NSDictionary *) productInfoDictForName:(NSString *) productName {
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	for(NSDictionary * item in inAppPurchases) {
+		if([item[@"Name"] isEqualToString:productName]) {
+			return item;
+		}
+	}
+	return nil;
+}
+
++ (NSDictionary *) productInfoDictForProductId:(NSString *) productId {
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	for(NSDictionary * item in inAppPurchases) {
+		if([item[@"ProductId"] isEqualToString:productId]) {
+			return item;
+		}
+	}
+	return nil;
+}
+
++ (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist; {
+	NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
+	[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+	NSString * productId = [IAPHelper productIdByName:productNameInPlist];
+	if(!productId) {
+		return FALSE;
+	}
+	NSDictionary * purchased = [[NSUserDefaults standardUserDefaults] objectForKey:IAPHelperNonConsumableDefaultsKey];
+	if(purchased[productId]) {
+		return [purchased[productId] boolValue];
+	}
+	return FALSE;
+}
+
++ (BOOL) hasPurchasedNonConsumableProductId:(NSString *) productId; {
+	NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
+	[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+	NSDictionary * purchased = [[NSUserDefaults standardUserDefaults] objectForKey:IAPHelperNonConsumableDefaultsKey];
+	if(purchased[productId]) {
+		return [purchased[productId] boolValue];
+	}
+	return FALSE;
+}
+
++ (NSArray *) allProductIds; {
 	NSMutableArray * products = [NSMutableArray array];
 	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
 	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
@@ -26,29 +74,33 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	return products;
 }
 
-+ (NSArray *) productsFromPlistByName:(NSArray *) productNames {
++ (NSString *) productNameByProductId:(NSString *) productId; {
+	NSDictionary * info = [IAPHelper productInfoDictForProductId:productId];
+	return info[@"Name"];
+}
+
++ (NSArray *) productIdsByNames:(NSArray *) productNames; {
 	NSMutableArray * products = [NSMutableArray array];
-	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
 	for(NSString * productName in productNames) {
-		for(NSDictionary * item in inAppPurchases) {
-			if([item[@"Name"] isEqualToString:productName]) {
-				[products addObject:item[@"ProductId"]];
-			}
-		}
+		NSDictionary * info = [IAPHelper productInfoDictForName:productName];
+		[products addObject:info[@"ProductId"]];
 	}
 	return products;
 }
 
-+ (NSString *) productFromPlistByName:(NSString *) productName; {
-	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
-	for(NSDictionary * item in inAppPurchases) {
-		if([item[@"Name"] isEqualToString:productName]) {
-			return item[@"ProductId"];
-		}
-	}
-	return nil;
++ (NSString *) productIdByName:(NSString *) productName; {
+	NSDictionary * info = [IAPHelper productInfoDictForName:productName];
+	return info[@"ProductId"];
+}
+
++ (NSString *) productTypeForProductId:(NSString *) productId {
+	NSDictionary * info = [IAPHelper productInfoDictForProductId:productId];
+	return info[@"Type"];
+}
+
++ (NSString *) productTypeForName:(NSString *) productName {
+	NSDictionary * info = [IAPHelper productInfoDictForName:productName];
+	return info[@"Type"];
 }
 
 - (id) init {
@@ -180,6 +232,20 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 - (void) completeTransaction:(SKPaymentTransaction *) transaction {
 	if(self.purchaseProductCompletion) {
 		dispatch_async(dispatch_get_main_queue(), ^{
+			
+			NSString * type = [IAPHelper productTypeForProductId:transaction.payment.productIdentifier];
+			
+			if([type isEqualToString:@"Non-Consumable"]) {
+				NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
+				[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+				
+				NSDictionary * purchases = [[NSUserDefaults standardUserDefaults] objectForKey:IAPHelperNonConsumableDefaultsKey];
+				NSMutableDictionary * updates = [NSMutableDictionary dictionaryWithDictionary:purchases];
+				updates[transaction.payment.productIdentifier] = @(TRUE);
+				
+				[[NSUserDefaults standardUserDefaults] setObject:updates forKey:IAPHelperNonConsumableDefaultsKey];
+			}
+			
 			self.purchaseProductCompletion(nil,transaction);
 		});
 	}
