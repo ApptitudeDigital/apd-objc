@@ -1,7 +1,7 @@
 
 #import "IAPHelper.h"
 
-NSString * const IAPHelperDomain = @"IAPHelperDomain";
+NSString * const IAPHelperDomain = @"com.apptitude.IAPHelper";
 const NSInteger IAPHelperErrorCodeProductNotFound = 1;
 const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
@@ -83,7 +83,7 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	self.loadProductsCompletion = completion;
 	[self readProductIdsFromPlist];
 	if(!self.productIds) {
-		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeNoProducts userInfo:nil]);
+		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeNoProducts userInfo:@{NSLocalizedDescriptionKey:@"Prodcut ids not loaded from plist."}]);
 	}
 	NSLog(@"loading products: %@",self.productIds);
 	SKProductsRequest * productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:self.productIds]];
@@ -93,14 +93,14 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 - (void) productsRequest:(SKProductsRequest *) request didReceiveResponse:(SKProductsResponse *)response {
 	self.skproducts = response.products;
-	dispatch_sync(dispatch_get_main_queue(), ^{
+	dispatch_async(dispatch_get_main_queue(), ^{
 		self.loadProductsCompletion(nil);
 	});
 }
 
 - (void) request:(SKRequest *) request didFailWithError:(NSError *)error {
-	dispatch_sync(dispatch_get_main_queue(), ^{
-		self.loadProductsCompletion(nil);
+	dispatch_async(dispatch_get_main_queue(), ^{
+		self.loadProductsCompletion(error);
 	});
 }
 
@@ -119,7 +119,7 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	}
 	
 	if(!purchaseProduct) {
-		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeProductNotFound userInfo:nil],nil);
+		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeProductNotFound userInfo:@{NSLocalizedDescriptionKey:@"Product not loaded from iTunes Connect."}],nil);
 	}
 	
 	self.purchaseProductCompletion = completion;
@@ -147,21 +147,27 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 - (void) completeTransaction:(SKPaymentTransaction *) transaction {
 	if(self.purchaseProductCompletion) {
-		self.purchaseProductCompletion(nil,transaction);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.purchaseProductCompletion(nil,transaction);
+		});
 	}
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 }
 
 - (void) restoreTransaction:(SKPaymentTransaction *) transaction {
 	if(self.restorePurchasesCompletion) {
-		self.restorePurchasesCompletion(nil,transaction,FALSE);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.restorePurchasesCompletion(nil,transaction,FALSE);
+		});
 	}
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 }
 
 - (void) failedTransaction:(SKPaymentTransaction *) transaction {
 	if(self.purchaseProductCompletion) {
-		self.purchaseProductCompletion(transaction.error,nil);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.purchaseProductCompletion(transaction.error,nil);
+		});
 	}
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 }
@@ -175,14 +181,18 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 - (void) paymentQueue:(SKPaymentQueue *) queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
-		self.restorePurchasesCompletion(error,nil,TRUE);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.restorePurchasesCompletion(error,nil,TRUE);
+		});
 	}
 }
 
 - (void) paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
-		self.restorePurchasesCompletion(nil,nil,TRUE);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.restorePurchasesCompletion(nil,nil,TRUE);
+		});
 	}
 }
 
