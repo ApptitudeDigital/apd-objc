@@ -16,6 +16,16 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 @implementation IAPHelper
 
++ (NSArray *) allProductIdsFromPlist; {
+	NSMutableArray * products = [NSMutableArray array];
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	for(NSDictionary * item in inAppPurchases) {
+		[products addObject:item[@"ProductId"]];
+	}
+	return products;
+}
+
 + (NSArray *) productsFromPlistByName:(NSArray *) productNames {
 	NSMutableArray * products = [NSMutableArray array];
 	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
