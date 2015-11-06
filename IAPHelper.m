@@ -16,6 +16,31 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 @implementation IAPHelper
 
++ (NSArray *) productsFromPlistByName:(NSArray *) productNames {
+	NSMutableArray * products = [NSMutableArray array];
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	for(NSString * productName in productNames) {
+		for(NSDictionary * item in inAppPurchases) {
+			if([item[@"Name"] isEqualToString:productName]) {
+				[products addObject:item[@"ProductId"]];
+			}
+		}
+	}
+	return products;
+}
+
++ (NSString *) productFromPlistByName:(NSString *) productName; {
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	for(NSDictionary * item in inAppPurchases) {
+		if([item[@"Name"] isEqualToString:productName]) {
+			return item[@"ProductId"];
+		}
+	}
+	return nil;
+}
+
 - (id) init {
 	self = [super init];
 	self.productIds = nil;
@@ -79,12 +104,9 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	return root;
 }
 
-- (void) loadItunesProductsCompletion:(IAPHelperLoadProductsCompletion) completion {
+- (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion {
 	self.loadProductsCompletion = completion;
-	[self readProductIdsFromPlist];
-	if(!self.productIds) {
-		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeNoProducts userInfo:@{NSLocalizedDescriptionKey:@"Prodcut ids not loaded from plist."}]);
-	}
+	self.productIds = productIds;
 	NSLog(@"loading products: %@",self.productIds);
 	SKProductsRequest * productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:self.productIds]];
 	productsRequest.delegate = self;
@@ -194,30 +216,6 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 			self.restorePurchasesCompletion(nil,nil,TRUE);
 		});
 	}
-}
-
-- (NSString *) productIdForName:(NSString *) productName; {
-	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
-	for(NSDictionary * item in inAppPurchases) {
-		if([item[@"Name"] isEqualToString:productName]) {
-			return item[@"ProductId"];
-		}
-	}
-	return nil;
-}
-
-- (void) readProductIdsFromPlist {
-	NSString * plist = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	if(!plist) {
-		@throw [NSException exceptionWithName:@"IAPHelperPlistNotFound" reason:@"InAppPurchases.plist not found in bundle." userInfo:nil];
-	}
-	NSArray * items = [NSArray arrayWithContentsOfFile:plist];
-	NSMutableArray * productdIds = [NSMutableArray array];
-	for(NSDictionary * item in items) {
-		[productdIds addObject:item[@"ProductId"]];
-	}
-	self.productIds = productdIds;
 }
 
 @end

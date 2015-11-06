@@ -18,33 +18,16 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 
 @interface IAPHelper : NSObject <SKProductsRequestDelegate,SKPaymentTransactionObserver>
 
-//All Product Ids must be in a plist called InAppPurchases.plist
-//Example:
-//<?xml version="1.0" encoding="UTF-8"?>
-//<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-//<plist version="1.0">
-//<array>
-// <dict>
-//  <key>Name</key>
-//  <string>AllSymbols</string>
-//  <key>ProductId</key>
-//  <string>com.hirschdenberg.modmath.AllSymbols</string>
-// </dict>
-// <dict>
-//  <key>Name</key>
-//  <string>Infinity</string>
-//  <key>ProductId</key>
-//  <string>com.hirschdenberg.modmath.Infinity</string>
-// </dict>
-//</array>
-//</plist>
-- (void) loadItunesProductsCompletion:(IAPHelperLoadProductsCompletion) completion;
+//get product ids by name from InAppPurchases.plist
++ (NSArray *) productsFromPlistByName:(NSArray *) productNames;
 
-//this looks up a product id by name in the InAppPurchases.plist resource.
-- (NSString *) productIdForName:(NSString *) productName;
+//gets a single product id by name from the InAppPurchases.plist.
++ (NSString *) productFromPlistByName:(NSString *) name;
+
+//load product information from itunes.
+- (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion;
 
 //restore all purchases
-//StoreRestoreCompletedNotification / StoreRestoreFailedNotification
 - (void) restorePurchasesWithCompletion:(IAPHelperRestorePurchasesCompletion) completion;
 
 //purchase a product id.
