@@ -160,12 +160,6 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	return formattedPrice;
 }
 
-- (UIViewController *) rootViewController {
-	NSObject <UIApplicationDelegate> * appDelegate = [UIApplication sharedApplication].delegate;
-	UIViewController * root = appDelegate.window.rootViewController;
-	return root;
-}
-
 - (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion {
 	self.loadProductsCompletion = completion;
 	self.productIds = productIds;
@@ -216,10 +210,12 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 - (void) paymentQueue:(SKPaymentQueue *) queue updatedTransactions:(NSArray *) transactions {
 	for(SKPaymentTransaction * transaction in transactions) {
 		if(transaction.transactionState == SKPaymentTransactionStatePurchased) {
+			[self persistTransaction:transaction];
 			[self completeTransaction:transaction];
 		}
 		
 		if(transaction.transactionState == SKPaymentTransactionStateRestored) {
+			[self persistTransaction:transaction];
 			[self restoreTransaction:transaction];
 		}
 		
@@ -229,45 +225,41 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	}
 }
 
-- (void) completeTransaction:(SKPaymentTransaction *) transaction {
-	if(self.purchaseProductCompletion) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			
-			NSString * type = [IAPHelper productTypeForProductId:transaction.payment.productIdentifier];
-			
-			if([type isEqualToString:@"Non-Consumable"]) {
-				NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
-				[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
-				
-				NSDictionary * purchases = [[NSUserDefaults standardUserDefaults] objectForKey:IAPHelperNonConsumableDefaultsKey];
-				NSMutableDictionary * updates = [NSMutableDictionary dictionaryWithDictionary:purchases];
-				updates[transaction.payment.productIdentifier] = @(TRUE);
-				
-				[[NSUserDefaults standardUserDefaults] setObject:updates forKey:IAPHelperNonConsumableDefaultsKey];
-			}
-			
-			self.purchaseProductCompletion(nil,transaction);
-		});
+- (void) persistTransaction:(SKPaymentTransaction *) transaction {
+	NSString * type = [IAPHelper productTypeForProductId:transaction.payment.productIdentifier];
+	
+	//only non-consumables are stored in defaults.
+	if([type isEqualToString:@"Non-Consumable"]) {
+		NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
+		[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+		
+		NSDictionary * purchases = [[NSUserDefaults standardUserDefaults] objectForKey:IAPHelperNonConsumableDefaultsKey];
+		NSMutableDictionary * updates = [NSMutableDictionary dictionaryWithDictionary:purchases];
+		updates[transaction.payment.productIdentifier] = @(TRUE);
+		
+		[[NSUserDefaults standardUserDefaults] setObject:updates forKey:IAPHelperNonConsumableDefaultsKey];
 	}
+}
+
+- (void) completeTransaction:(SKPaymentTransaction *) transaction {
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+	if(self.purchaseProductCompletion) {
+		self.purchaseProductCompletion(nil,transaction);
+	}
 }
 
 - (void) restoreTransaction:(SKPaymentTransaction *) transaction {
-	if(self.restorePurchasesCompletion) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.restorePurchasesCompletion(nil,transaction,FALSE);
-		});
-	}
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+	if(self.restorePurchasesCompletion) {
+		self.restorePurchasesCompletion(nil,transaction,FALSE);
+	}
 }
 
 - (void) failedTransaction:(SKPaymentTransaction *) transaction {
-	if(self.purchaseProductCompletion) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.purchaseProductCompletion(transaction.error,nil);
-		});
-	}
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+	if(self.purchaseProductCompletion) {
+		self.purchaseProductCompletion(transaction.error,nil);
+	}
 }
 
 - (void) restorePurchasesWithCompletion:(IAPHelperRestorePurchasesCompletion) completion {
@@ -279,18 +271,14 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 - (void) paymentQueue:(SKPaymentQueue *) queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.restorePurchasesCompletion(error,nil,TRUE);
-		});
+		self.restorePurchasesCompletion(error,nil,TRUE);
 	}
 }
 
 - (void) paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.restorePurchasesCompletion(nil,nil,TRUE);
-		});
+		self.restorePurchasesCompletion(nil,nil,TRUE);
 	}
 }
 
