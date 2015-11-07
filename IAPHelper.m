@@ -229,7 +229,7 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 	NSString * type = [IAPHelper productTypeForProductId:transaction.payment.productIdentifier];
 	
 	//only non-consumables are stored in defaults.
-	if([type isEqualToString:@"Non-Consumable"]) {
+	if(type && [type isEqualToString:@"Non-Consumable"]) {
 		NSDictionary * defaults = @{IAPHelperNonConsumableDefaultsKey:@{}};
 		[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
 		
