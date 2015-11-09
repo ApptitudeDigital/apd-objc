@@ -171,15 +171,11 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 - (void) productsRequest:(SKProductsRequest *) request didReceiveResponse:(SKProductsResponse *)response {
 	self.skproducts = response.products;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		self.loadProductsCompletion(nil);
-	});
+	self.loadProductsCompletion(nil);
 }
 
 - (void) request:(SKRequest *) request didFailWithError:(NSError *)error {
-	dispatch_async(dispatch_get_main_queue(), ^{
-		self.loadProductsCompletion(error);
-	});
+	self.loadProductsCompletion(error);
 }
 
 - (void) purchaseItunesProductId:(NSString *) productId completion:(IAPHelperPurchaseProductCompletion)completion {
