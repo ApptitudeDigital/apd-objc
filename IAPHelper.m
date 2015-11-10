@@ -7,6 +7,8 @@ NSString * const IAPHelperDomain = @"com.apptitude.IAPHelper";
 const NSInteger IAPHelperErrorCodeProductNotFound = 1;
 const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
+static IAPHelper * _defaultHelper;
+
 @interface IAPHelper ()
 @property BOOL isRestoring;
 @property NSArray * productIds;
@@ -26,9 +28,12 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 }
 
 + (IAPHelper *) defaultHelper {
-	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
-	return [[IAPHelper alloc] initWithProductInfo:inAppPurchases];
+	if(!_defaultHelper) {
+		NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+		NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+		_defaultHelper = [[IAPHelper alloc] initWithProductInfo:inAppPurchases];
+	}
+	return _defaultHelper;
 }
 
 - (id) initWithProductInfo:(NSArray *) productInfo; {
@@ -40,6 +45,7 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 }
 
 - (void) dealloc {
+	[[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
 	self.restorePurchasesCompletion = nil;
 	self.loadProductsCompletion = nil;
 	self.purchaseProductCompletion = nil;
