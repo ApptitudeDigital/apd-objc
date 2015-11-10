@@ -18,9 +18,10 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 
 @interface IAPHelper : NSObject <SKProductsRequestDelegate,SKPaymentTransactionObserver>
 
-//Below static methods are all helpers for working with InAppPurchases.plist.
+//returns IAPHelper where productInfo comes from InAppPurchases.plist.
++ (IAPHelper *) defaultHelper;
 
-//Example Plist:
+//Example Product Info:
 //<?xml version="1.0" encoding="UTF-8"?>
 //<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 //<plist version="1.0">
@@ -43,16 +44,14 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 // </dict>
 //</array>
 //</plist>
-+ (BOOL) hasPurchasedNonConsumableProductId:(NSString *) productId;
-+ (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist;
-+ (NSDictionary *) productInfoDictForName:(NSString *) productName;
-+ (NSDictionary *) productInfoDictForProductId:(NSString *) productId;
-+ (NSArray *) allProductIds;
-+ (NSString *) productTypeForName:(NSString *) productName;
-+ (NSString *) productTypeForProductId:(NSString *) productId;
-+ (NSArray *) productIdsByNames:(NSArray *) productNames;
-+ (NSString *) productIdByName:(NSString *) productName;
-+ (NSString *) productNameByProductId:(NSString *) productId;
+- (id) initWithProductInfo:(NSArray *) productInfo;
+
+//utilities for getting info from product info
+- (NSArray *) productIdsByNames:(NSArray *) productNames;
+- (NSString *) productIdByName:(NSString *) productName;
+- (NSString *) productTypeForProductId:(NSString *) productId;
+- (NSString *) productNameByProductId:(NSString *) productId;
+- (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist;
 
 //load product information from itunes.
 - (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion;
