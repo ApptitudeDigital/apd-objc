@@ -18,12 +18,11 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 
 @interface IAPHelper : NSObject <SKProductsRequestDelegate,SKPaymentTransactionObserver>
 
-//returns productInfo from InAppPurchases.plist.
-+ (NSArray *) defaultProductInfo;
-
-//returns IAPHelper where productInfo comes from InAppPurchases.plist.
+//Singletone instance. By default product info comes from InAppPurchases.plist.
+//Use +setProductInfo: if you have custom product info.
 + (IAPHelper *) defaultHelper;
 
+//Set this if you have custom product info.
 //Example Product Info:
 //<?xml version="1.0" encoding="UTF-8"?>
 //<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -47,7 +46,7 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 // </dict>
 //</array>
 //</plist>
-- (id) initWithProductInfo:(NSArray *) productInfo;
++ (void) setProductInfo:(NSArray *) productInfo;
 
 //utilities for getting info from product info
 - (NSArray *) productIdsByNames:(NSArray *) productNames;

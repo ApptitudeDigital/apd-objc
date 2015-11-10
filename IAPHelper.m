@@ -8,12 +8,12 @@ const NSInteger IAPHelperErrorCodeProductNotFound = 1;
 const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 static IAPHelper * _defaultHelper;
+static NSArray * _productInfo;
 
 @interface IAPHelper ()
 @property BOOL isRestoring;
 @property NSArray * productIds;
 @property NSArray * skproducts;
-@property NSArray * productInfo;
 @property (strong) IAPHelperRestorePurchasesCompletion restorePurchasesCompletion;
 @property (strong) IAPHelperLoadProductsCompletion loadProductsCompletion;
 @property (strong) IAPHelperPurchaseProductCompletion purchaseProductCompletion;
@@ -21,24 +21,24 @@ static IAPHelper * _defaultHelper;
 
 @implementation IAPHelper
 
-+ (NSArray *) defaultProductInfo {
-	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
-	return inAppPurchases;
++ (void) setProductInfo:(NSArray *) productInfo {
+	_productInfo = productInfo;
 }
 
 + (IAPHelper *) defaultHelper {
 	if(!_defaultHelper) {
-		NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
-		NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
-		_defaultHelper = [[IAPHelper alloc] initWithProductInfo:inAppPurchases];
+		if(!_productInfo) {
+			NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+			NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+			_productInfo = inAppPurchases;
+		}
+		_defaultHelper = [[IAPHelper alloc] init];
 	}
 	return _defaultHelper;
 }
 
-- (id) initWithProductInfo:(NSArray *) productInfo; {
+- (id) init; {
 	self = [super init];
-	self.productInfo = productInfo;
 	self.productIds = nil;
 	[[SKPaymentQueue defaultQueue] addTransactionObserver:self];
 	return self;
@@ -52,7 +52,7 @@ static IAPHelper * _defaultHelper;
 }
 
 - (NSDictionary *) productInfoDictForProductId:(NSString *) productId {
-	for(NSDictionary * item in self.productInfo) {
+	for(NSDictionary * item in _productInfo) {
 		if([item[@"ProductId"] isEqualToString:productId]) {
 			return item;
 		}
@@ -61,7 +61,7 @@ static IAPHelper * _defaultHelper;
 }
 
 - (NSDictionary *) productInfoDictForName:(NSString *) productName {
-	for(NSDictionary * item in self.productInfo) {
+	for(NSDictionary * item in _productInfo) {
 		if([item[@"Name"] isEqualToString:productName]) {
 			return item;
 		}
@@ -232,6 +232,7 @@ static IAPHelper * _defaultHelper;
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 	if(self.purchaseProductCompletion) {
 		self.purchaseProductCompletion(nil,transaction);
+		self.purchaseProductCompletion = nil;
 	}
 }
 
@@ -246,6 +247,7 @@ static IAPHelper * _defaultHelper;
 	[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 	if(self.purchaseProductCompletion) {
 		self.purchaseProductCompletion(transaction.error,nil);
+		self.purchaseProductCompletion = nil;
 	}
 }
 
@@ -259,6 +261,7 @@ static IAPHelper * _defaultHelper;
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
 		self.restorePurchasesCompletion(error,nil,TRUE);
+		self.restorePurchasesCompletion = nil;
 	}
 }
 
@@ -266,6 +269,7 @@ static IAPHelper * _defaultHelper;
 	self.isRestoring = FALSE;
 	if(self.restorePurchasesCompletion) {
 		self.restorePurchasesCompletion(nil,nil,TRUE);
+		self.restorePurchasesCompletion = nil;
 	}
 }
 
