@@ -18,6 +18,9 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 
 @interface IAPHelper : NSObject <SKProductsRequestDelegate,SKPaymentTransactionObserver>
 
+//returns productInfo from InAppPurchases.plist.
++ (NSArray *) defaultProductInfo;
+
 //returns IAPHelper where productInfo comes from InAppPurchases.plist.
 + (IAPHelper *) defaultHelper;
 

@@ -19,6 +19,12 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 @implementation IAPHelper
 
++ (NSArray *) defaultProductInfo {
+	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
+	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
+	return inAppPurchases;
+}
+
 + (IAPHelper *) defaultHelper {
 	NSString * plistFile = [[NSBundle mainBundle] pathForResource:@"InAppPurchases" ofType:@"plist"];
 	NSArray * inAppPurchases = [NSArray arrayWithContentsOfFile:plistFile];
