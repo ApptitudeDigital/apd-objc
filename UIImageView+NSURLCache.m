@@ -66,6 +66,8 @@ static NSURLCache * _cacheURL;
 			});
 			return;
 		}
+		
+		[_cacheURL removeCachedResponseForRequest:request];
 	}
 	
 	NSLog(@"[UIImageView+NSURLCache] cache miss for url: %@",request.URL);
