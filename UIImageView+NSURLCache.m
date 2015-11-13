@@ -105,7 +105,7 @@ static NSURLCache * _cacheURL;
 
 - (void) setImageWithDefaultAuthBasicForURL:(NSURL *) url withCompletion:(UIImageViewNSURLCache) completion; {
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:60];
-	[request setAuthBasicHeaderUsername:_authUsername password:_authUsername];
+	[request setAuthBasicHeaderUsername:_authUsername password:_authPassword];
 	[self setImageForRequest:request withCompletion:completion];
 }
 
