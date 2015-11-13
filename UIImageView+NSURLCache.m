@@ -79,6 +79,7 @@ static NSURLCache * _cacheURL;
 			if(cacheError) {
 				NSLog(@"[UIImageView+NSURLCache] cache error: %@",cacheError);
 				completion(cacheError,nil);
+				return;
 			}
 			
 			if(data) {
