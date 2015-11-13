@@ -24,7 +24,7 @@ static NSURLCache * _cacheURL;
 	}
 }
 
-- (void) cacheResponse:(NSURLResponse *) response forRequest:(NSURLRequest *) request data:(NSData *) data error:(NSError **) error {
+- (void) cacheResponse:(NSURLResponse *) response forRequest:(NSURLRequest *) request data:(NSData *) data error:(__autoreleasing NSError **) error {
 	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 	if(httpResponse.statusCode != 200) {
 		*error = [NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:UIImageViewNSURLCacheErrorResponseCode userInfo:@{NSLocalizedDescriptionKey:@"Response from server was not 200"}];
@@ -44,6 +44,11 @@ static NSURLCache * _cacheURL;
 
 - (void) setImageForRequest:(NSURLRequest *) request withCompletion:(UIImageViewNSURLCache) completion {
 	[self setupCache];
+	
+	if(!request.URL) {
+		NSLog(@"[UIImageView+NSURLCache] WARNING: request.URL was NULL");
+		completion([NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:2 userInfo:@{NSLocalizedDescriptionKey:@"request.URL is nil"}],nil);
+	}
 	
 	if(request.cachePolicy != NSURLRequestReturnCacheDataElseLoad) {
 		NSLog(@"[UIImageView+NSURLCache] WARNING: setImageForRequest: The request's cache policy is not set to NSURLRequestReturnCacheDataElseLoad");
@@ -72,7 +77,7 @@ static NSURLCache * _cacheURL;
 			[self cacheResponse:response forRequest:request data:data error:&cacheError];
 			
 			if(cacheError) {
-				NSLog(@"[UIImageView+NSURLCache] cache error: %@",error);
+				NSLog(@"[UIImageView+NSURLCache] cache error: %@",cacheError);
 				completion(cacheError,nil);
 			}
 			
