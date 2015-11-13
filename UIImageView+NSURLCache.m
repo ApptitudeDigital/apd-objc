@@ -20,8 +20,12 @@ static NSURLCache * _cacheURL;
 - (void) setupCache {
 	if(!_cacheURL) {
 		_cacheURL = [[NSURLCache alloc] initWithMemoryCapacity:10*1024*1024 diskCapacity:100*1024*1024 diskPath:nil]; //10MB memory, 100MB disk
-		[NSURLCache setSharedURLCache:_cacheURL];
 	}
+}
+
+- (BOOL) acceptedContentType:(NSString *) contentType {
+	NSArray * acceptedContentTypes = @[@"image/png",@"image/jpg",@"image/jpeg",@"image/bitmap"];
+	return [acceptedContentTypes containsObject:contentType];
 }
 
 - (void) cacheResponse:(NSURLResponse *) response forRequest:(NSURLRequest *) request data:(NSData *) data error:(__autoreleasing NSError **) error {
@@ -32,8 +36,7 @@ static NSURLCache * _cacheURL;
 	}
 	
 	NSString * contentType = [[httpResponse allHeaderFields] objectForKey:@"Content-Type"];
-	NSArray * acceptedContentTypes = @[@"image/png",@"image/jpg",@"image/jpeg",@"image/bitmap"];
-	if(![acceptedContentTypes containsObject:contentType]) {
+	if(![self acceptedContentType:contentType]) {
 		*error = [NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:UIimageViewNSURLCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}];
 		return;
 	}
@@ -50,18 +53,19 @@ static NSURLCache * _cacheURL;
 		completion([NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:2 userInfo:@{NSLocalizedDescriptionKey:@"request.URL is nil"}],nil);
 	}
 	
-	if(request.cachePolicy != NSURLRequestReturnCacheDataElseLoad) {
-		NSLog(@"[UIImageView+NSURLCache] WARNING: setImageForRequest: The request's cache policy is not set to NSURLRequestReturnCacheDataElseLoad");
-	}
-	
 	if([_cacheURL cachedResponseForRequest:request]) {
-		//NSLog(@"[UIImageView+NSURLCache] cache hit for image url : %@",request.URL);
+		
 		NSCachedURLResponse * response = [_cacheURL cachedResponseForRequest:request];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.image = [UIImage imageWithData:response.data];
-			completion(nil,self.image);
-		});
-		return;
+		NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response.response;
+		NSString * contentType = [[httpResponse allHeaderFields] objectForKey:@"Content-Type"];
+		
+		if(httpResponse.statusCode == 200 && [self acceptedContentType:contentType]) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				self.image = [UIImage imageWithData:response.data];
+				completion(nil,self.image);
+			});
+			return;
+		}
 	}
 	
 	NSLog(@"[UIImageView+NSURLCache] cache miss for url: %@",request.URL);
@@ -94,18 +98,18 @@ static NSURLCache * _cacheURL;
 }
 
 - (void) setImageForURL:(NSURL *) url withCompletion:(UIImageViewNSURLCache) completion; {
-	NSURLRequest * request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:60];
+	NSURLRequest * request = [NSURLRequest requestWithURL:url];
 	[self setImageForRequest:request withCompletion:completion];
 }
 
 - (void) setImageForURL:(NSURL *) url authBasicWithUsername:(NSString *) username password:(NSString *) password withCompletion:(UIImageViewNSURLCache)completion; {
-	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:60];
+	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
 	[request setAuthBasicHeaderUsername:username password:password];
 	[self setImageForRequest:request withCompletion:completion];
 }
 
 - (void) setImageWithDefaultAuthBasicForURL:(NSURL *) url withCompletion:(UIImageViewNSURLCache) completion; {
-	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:60];
+	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
 	[request setAuthBasicHeaderUsername:_authUsername password:_authPassword];
 	[self setImageForRequest:request withCompletion:completion];
 }
