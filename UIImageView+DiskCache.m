@@ -76,6 +76,7 @@ static NSURL * _cacheDir;
 }
 
 - (void) setImageInBackground:(NSURL *) cachedURL completion:(UIImageViewDiskCacheCompletion) completion {
+	__weak UIImageView * weakSelf = self;
 	dispatch_queue_t background = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND,0);
 	dispatch_async(background, ^{
 		NSDate * modified = [NSDate date];
@@ -84,7 +85,7 @@ static NSURL * _cacheDir;
 		[[NSFileManager defaultManager] setAttributes:attributes ofItemAtPath:cachedURL.path error:&error];
 		UIImage * image = [UIImage imageWithContentsOfFile:cachedURL.path];
 		dispatch_async(dispatch_get_main_queue(), ^{
-			self.image = image;
+			weakSelf.image = image;
 			completion(nil,image);
 		});
 	});
@@ -112,6 +113,8 @@ static NSURL * _cacheDir;
 	
 	NSLog(@"[UIImageView+NSURLCache] cache miss for url: %@",request.URL);
 	
+	__weak UIImageView * weakSelf = self;
+	
 	NSURLSessionDataTask * imageTask = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if(error) {
@@ -127,15 +130,15 @@ static NSURL * _cacheDir;
 			}
 			
 			NSString * contentType = [[httpResponse allHeaderFields] objectForKey:@"Content-Type"];
-			if(![self acceptedContentType:contentType]) {
+			if(![weakSelf acceptedContentType:contentType]) {
 				completion([NSError errorWithDomain:UIImageViewDiskCacheErrorDomain code:UIImageViewDiskCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}],nil);
 				return;
 			}
 			
 			if(data) {
-				self.image = [UIImage imageWithData:data];
-				[self writeData:data toFile:cachedURL];
-				completion(nil,self.image);
+				weakSelf.image = [UIImage imageWithData:data];
+				[weakSelf writeData:data toFile:cachedURL];
+				completion(nil,weakSelf.image);
 			}
 		});
 	}];
