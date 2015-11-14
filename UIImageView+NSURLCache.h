@@ -1,6 +1,7 @@
 
 #import <UIKit/UIKit.h>
 
+extern NSString * const UIImageViewNSURLCacheErrorDomain;
 extern const NSInteger UIImageViewNSURLCacheErrorResponseCode;
 extern const NSInteger UIimageViewNSURLCacheErrorContentType;
 

@@ -2,6 +2,7 @@
 #import "UIImageView+NSURLCache.h"
 #import "NSMutableURLRequest+Additions.h"
 
+NSString * const UIImageViewNSURLCacheErrorDomain = @"com.apptitude.UIImageView+NSURLCache";
 const NSInteger UIImageViewNSURLCacheErrorResponseCode = 1;
 const NSInteger UIimageViewNSURLCacheErrorContentType = 2;
 
@@ -31,13 +32,14 @@ static NSURLCache * _cacheURL;
 - (void) cacheResponse:(NSURLResponse *) response forRequest:(NSURLRequest *) request data:(NSData *) data error:(__autoreleasing NSError **) error {
 	NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 	if(httpResponse.statusCode != 200) {
-		*error = [NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:UIImageViewNSURLCacheErrorResponseCode userInfo:@{NSLocalizedDescriptionKey:@"Response from server was not 200"}];
+		NSString * message = [NSString stringWithFormat:@"Invalid Image Cache Response %li",(long)httpResponse.statusCode];
+		*error = [NSError errorWithDomain:UIImageViewNSURLCacheErrorDomain code:UIImageViewNSURLCacheErrorResponseCode userInfo:@{NSLocalizedDescriptionKey:message}];
 		return;
 	}
 	
 	NSString * contentType = [[httpResponse allHeaderFields] objectForKey:@"Content-Type"];
 	if(![self acceptedContentType:contentType]) {
-		*error = [NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:UIimageViewNSURLCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}];
+		*error = [NSError errorWithDomain:UIImageViewNSURLCacheErrorDomain code:UIimageViewNSURLCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}];
 		return;
 	}
 	
@@ -50,7 +52,7 @@ static NSURLCache * _cacheURL;
 	
 	if(!request.URL) {
 		NSLog(@"[UIImageView+NSURLCache] WARNING: request.URL was NULL");
-		completion([NSError errorWithDomain:@"com.apptitude.UIImageView-NSURLCache" code:2 userInfo:@{NSLocalizedDescriptionKey:@"request.URL is nil"}],nil);
+		completion([NSError errorWithDomain:UIImageViewNSURLCacheErrorDomain code:2 userInfo:@{NSLocalizedDescriptionKey:@"request.URL is nil"}],nil);
 	}
 	
 	if([_cacheURL cachedResponseForRequest:request]) {
@@ -96,7 +98,6 @@ static NSURLCache * _cacheURL;
 	}];
 	
 	[imageTask resume];
-	
 }
 
 - (void) setImageForURL:(NSURL *) url withCompletion:(UIImageViewNSURLCache) completion; {
