@@ -1,6 +1,5 @@
 
 #import "UIImageView+DiskCache.h"
-#import "NSTimer+Blocks.h"
 
 NSString * const UIImageViewDiskCacheErrorDomain = @"com.apptitude.UIImageView+DisckCache";
 const NSInteger UIImageViewDiskCacheErrorResponseCode = 1;
