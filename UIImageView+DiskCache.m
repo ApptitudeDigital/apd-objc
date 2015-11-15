@@ -193,6 +193,7 @@ static NSURL * _cacheDir;
 		if(cached.maxage > 0 && diff < cached.maxage) {
 			
 			[self setImageInBackground:cachedImageURL completion:completion];
+			return;
 		
 		} else {
 			
