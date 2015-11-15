@@ -185,22 +185,25 @@ static NSURL * _cacheDir;
 		
 		cached = [NSKeyedUnarchiver unarchiveObjectWithFile:cacheInfoFile.path];
 		
-		//set image if it's available. regardless if a reload happens below. Want an image shown as soon as possible.
-		BOOL setFile = FALSE;
-		if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
-			setFile = TRUE;
-			[self setImageInBackground:cachedImageURL completion:nil];
-		}
-		
 		//check max age
 		NSDate * now = [NSDate date];
 		NSDate * createdDate = [self createdDateForFileURL:cachedImageURL];
 		NSTimeInterval diff = [now timeIntervalSinceDate:createdDate];
 		
 		//cache is still valid, don't reload
-		if(setFile && cached.maxage > 0 && diff < cached.maxage) {
+		if(cached.maxage > 0 && diff < cached.maxage) {
+			
 			[self setImageInBackground:cachedImageURL completion:completion];
-			return;
+		
+		} else {
+			
+			//the image will be loaded again below, set the available image so something shows up immediately
+			//even though the image is loaded again below.
+			
+			if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
+				[self setImageInBackground:cachedImageURL completion:nil];
+			}
+			
 		}
 	}
 	
@@ -210,7 +213,7 @@ static NSURL * _cacheDir;
 		
 		if(cached.maxage == 0) {
 			NSLog(@"[UIImageView+DiskCache] WARNING: Image response ETag is set but no Cache-Control is available. "
-				  @"Image requests will always be sent, the response may or may not be 304."
+				  @"Image requests will always be sent, the response may or may not be 304. "
 				  @"Add Cache-Control policies to the server to correctly have content expire locally.");
 		}
 	}
@@ -261,7 +264,7 @@ static NSURL * _cacheDir;
 				
 				if(!headers[@"Cache-Control"]) {
 					NSLog(@"[UIImageView+DiskCache] WARNING: Image response ETag is set but no Cache-Control is available. "
-						  @"Image requests will always be sent, the response may or may not be 304."
+						  @"Image requests will always be sent, the response may or may not be 304. "
 						  @"Add Cache-Control policies to the server to correctly have content expire locally.");
 				}
 			}
