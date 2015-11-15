@@ -192,9 +192,14 @@ static NSURL * _cacheDir;
 		//cache is still valid, don't reload
 		if(cached.maxage > 0 && diff < cached.maxage) {
 			
-			[self setImageInBackground:cachedImageURL completion:completion];
-			return;
-		
+			//check if file is available.
+			if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
+				
+				//set image and don't reload it.
+				[self setImageInBackground:cachedImageURL completion:completion];
+				return;
+			}
+			
 		} else {
 			
 			//the image will be loaded again below, set the available image so something shows up immediately
