@@ -229,6 +229,11 @@ static NSURL * _cacheDir;
 				return;
 			}
 			
+			if(!headers[@"ETag"] && !headers[@"Cache-Control"]) {
+				NSLog(@"[UIImageView+DiskCache] WARNING: You are loading images using the Cache Control policies but the server returned neither ETag or Cache-Control. "
+					  @"Images will continue to load every time the image is needed.");
+			}
+			
 			if(headers[@"ETag"]) {
 				cached.etag = headers[@"ETag"];
 				
