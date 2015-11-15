@@ -187,6 +187,7 @@ static NSURL * _cacheDir;
 		
 		//cache is still valid, don't reload
 		if(setFile && cached.maxage > 0 && diff < cached.maxage) {
+			[self setImageInBackground:cachedImageURL completion:completion];
 			return;
 		}
 	}
@@ -202,6 +203,8 @@ static NSURL * _cacheDir;
 		}
 	}
 	
+	__weak UIImageView * weakself = self;
+	
 	NSURLSessionDataTask * task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if(error) {
@@ -213,7 +216,7 @@ static NSURL * _cacheDir;
 			NSDictionary * headers = [httpResponse allHeaderFields];
 			
 			if(httpResponse.statusCode == 304) { //304 Not Modified. Use Cache.
-				[self setImageInBackground:cachedImageURL completion:completion];
+				[weakself setImageInBackground:cachedImageURL completion:completion];
 				return;
 			}
 			
@@ -224,7 +227,7 @@ static NSURL * _cacheDir;
 			}
 			
 			NSString * contentType = headers[@"Content-Type"];
-			if(![self acceptedContentType:contentType]) {
+			if(![weakself acceptedContentType:contentType]) {
 				completion([NSError errorWithDomain:UIImageViewDiskCacheErrorDomain code:UIImageViewDiskCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}],nil);
 				return;
 			}
@@ -257,10 +260,10 @@ static NSURL * _cacheDir;
 				}
 			}
 			
-			self.image = [UIImage imageWithData:data];
-			[self writeData:data toFile:cachedImageURL];
-			[self writeCacheControlData:cached toFile:cacheInfoFile];
-			completion(nil,self.image);
+			weakself.image = [UIImage imageWithData:data];
+			[weakself writeData:data toFile:cachedImageURL];
+			[weakself writeCacheControlData:cached toFile:cacheInfoFile];
+			completion(nil,weakself.image);
 		});
 	}];
 	
