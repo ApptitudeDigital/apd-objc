@@ -155,6 +155,18 @@ static NSURL * _cacheDir;
 	});
 }
 
+- (void) setMaxAgeForCacheInfo:(UIImageViewCache *) cacheInfo fromCacheControlString:(NSString *) cacheControl {
+	NSScanner * scanner = [[NSScanner alloc] initWithString:cacheControl];
+	NSString * prelim = nil;
+	[scanner scanUpToString:@"=" intoString:&prelim];
+	[scanner scanString:@"=" intoString:nil];
+	double maxage = -1;
+	[scanner scanDouble:&maxage];
+	if(maxage > -1) {
+		cacheInfo.maxage = (NSTimeInterval)maxage;
+	}
+}
+
 - (void) setImageForRequestWithCacheControl:(NSMutableURLRequest *) request withCompletion:(UIImageViewDiskCacheCompletion) completion; {
 	if(!request.URL) {
 		NSLog(@"[UIImageView+DiskCache] WARNING: request.URL was NULL");
@@ -216,6 +228,13 @@ static NSURL * _cacheDir;
 			NSDictionary * headers = [httpResponse allHeaderFields];
 			
 			if(httpResponse.statusCode == 304) { //304 Not Modified. Use Cache.
+				
+				if(headers[@"Cache-Control"]) {
+					NSString * control = headers[@"Cache-Control"];
+					[self setMaxAgeForCacheInfo:cached fromCacheControlString:control];
+					[self writeCacheControlData:cached toFile:cacheInfoFile];
+				}
+				
 				[weakself setImageInBackground:cachedImageURL completion:completion];
 				return;
 			}
@@ -249,15 +268,7 @@ static NSURL * _cacheDir;
 			
 			if(headers[@"Cache-Control"]) {
 				NSString * control = headers[@"Cache-Control"];
-				NSScanner * scanner = [[NSScanner alloc] initWithString:control];
-				NSString * prelim = nil;
-				[scanner scanUpToString:@"=" intoString:&prelim];
-				[scanner scanString:@"=" intoString:nil];
-				double maxage = -1;
-				[scanner scanDouble:&maxage];
-				if(maxage > -1) {
-					cached.maxage = (NSTimeInterval)maxage;
-				}
+				[self setMaxAgeForCacheInfo:cached fromCacheControlString:control];
 			}
 			
 			weakself.image = [UIImage imageWithData:data];
