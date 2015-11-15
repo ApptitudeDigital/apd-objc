@@ -1,15 +1,13 @@
 
 #import "UIImageView+DiskCache.h"
-#import "NSMutableURLRequest+Additions.h"
+#import "NSTimer+Blocks.h"
 
 NSString * const UIImageViewDiskCacheErrorDomain = @"com.apptitude.UIImageView+DisckCache";
 const NSInteger UIImageViewDiskCacheErrorResponseCode = 1;
 const NSInteger UIImageViewDiskCacheErrorContentType = 2;
 const NSInteger UIImageViewDiskCacheErrorNilURL = 3;
 
-static NSString * _authUsername;
-static NSString * _authPassword;
-
+static NSString * _auth;
 static NSURL * _cacheDir;
 
 @implementation UIImageView (DiskCache)
@@ -18,6 +16,17 @@ static NSURL * _cacheDir;
 	NSURL * appSupport = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
 	_cacheDir = [appSupport URLByAppendingPathComponent:@"UIImageViewDiskCache"];
 	[[NSFileManager defaultManager] createDirectoryAtURL:_cacheDir withIntermediateDirectories:TRUE attributes:nil error:nil];
+}
+
++ (void) setCacheDir:(NSURL *) dirURL {
+	_cacheDir = dirURL;
+}
+
++ (void) setDefaultAuthBasicUsername:(NSString *) username password:(NSString *) password; {
+	NSString * authString = [NSString stringWithFormat:@"%@:%@",username,password];
+	NSData * authData = [authString dataUsingEncoding:NSUTF8StringEncoding];
+	NSString * encoded = [authData base64EncodedStringWithOptions:0];
+	_auth = [NSString stringWithFormat:@"Basic %@",encoded];
 }
 
 + (void) clearCachedFilesOlderThan1Week {
@@ -45,21 +54,10 @@ static NSURL * _cacheDir;
 	});
 }
 
-+ (void) setCacheDir:(NSURL *) dirURL {
-	_cacheDir = dirURL;
-}
-
-+ (void) setDefaultAuthBasicUsername:(NSString *) username password:(NSString *) password; {
-	_authUsername = username;
-	_authPassword = password;
-}
-
 - (NSURL *) localFileURLForURL:(NSURL *) url {
 	if(!url) {
 		return NULL;
 	}
-	//NSString * path1 = [url absoluteString];
-	//NSString * path = (__bridge NSString *)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(CFAllocatorGetDefault(),(CFStringRef)path1,NULL,kCFStringEncodingUTF8);
 	NSString * path = [url.absoluteString stringByRemovingPercentEncoding];
 	NSString * path2 = [path stringByReplacingOccurrencesOfString:@"http://" withString:@""];
 	path2 = [path2 stringByReplacingOccurrencesOfString:@"https://" withString:@""];
@@ -153,13 +151,17 @@ static NSURL * _cacheDir;
 
 - (void) setImageForURL:(NSURL *) url authBasicWithUsername:(NSString *) username password:(NSString *) password withCompletion:(UIImageViewDiskCacheCompletion)completion; {
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
-	[request setAuthBasicHeaderUsername:username password:password];
+	NSString * authString = [NSString stringWithFormat:@"%@:%@",username,password];
+	NSData * authData = [authString dataUsingEncoding:NSUTF8StringEncoding];
+	NSString * encoded = [authData base64EncodedStringWithOptions:0];
+	NSString * headerValue = [NSString stringWithFormat:@"Basic %@",encoded];
+	[request setValue:headerValue forHTTPHeaderField:@"Authorization"];
 	[self setImageForRequest:request withCompletion:completion];
 }
 
 - (void) setImageWithDefaultAuthBasicForURL:(NSURL *) url withCompletion:(UIImageViewDiskCacheCompletion) completion; {
 	NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
-	[request setAuthBasicHeaderUsername:_authUsername password:_authPassword];
+	[request setValue:_auth forHTTPHeaderField:@"Authorization"];
 	[self setImageForRequest:request withCompletion:completion];
 }
 
