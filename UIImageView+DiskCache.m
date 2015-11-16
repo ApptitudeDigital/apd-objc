@@ -78,21 +78,6 @@ static NSURL * _cacheDir;
 	});
 }
 
-- (NSURL *) localCacheControlFileURLForURL:(NSURL *) url {
-	if(!url) {
-		return NULL;
-	}
-	NSString * path = [url.absoluteString stringByRemovingPercentEncoding];
-	NSString * path2 = [path stringByReplacingOccurrencesOfString:@"http://" withString:@""];
-	path2 = [path2 stringByReplacingOccurrencesOfString:@"https://" withString:@""];
-	path2 = [path2 stringByReplacingOccurrencesOfString:@":" withString:@"-"];
-	path2 = [path2 stringByReplacingOccurrencesOfString:@"?" withString:@"-"];
-	path2 = [path2 stringByReplacingOccurrencesOfString:@"/" withString:@"-"];
-	path2 = [path2 stringByReplacingOccurrencesOfString:@" " withString:@"_"];
-	path2 = [path2 stringByAppendingString:@".cc"];
-	return [_cacheDir URLByAppendingPathComponent:path2];
-}
-
 - (NSURL *) localFileURLForURL:(NSURL *) url {
 	if(!url) {
 		return NULL;
@@ -107,8 +92,17 @@ static NSURL * _cacheDir;
 	return [_cacheDir URLByAppendingPathComponent:path2];
 }
 
+- (NSURL *) localCacheControlFileURLForURL:(NSURL *) url {
+	if(!url) {
+		return NULL;
+	}
+	NSURL * localImageFile = [self localFileURLForURL:url];
+	NSString * path = [localImageFile.path stringByAppendingString:@".cc"];
+	return [NSURL fileURLWithPath:path];
+}
+
 - (BOOL) acceptedContentType:(NSString *) contentType {
-	NSArray * acceptedContentTypes = @[@"image/png",@"image/jpg",@"image/jpeg",@"image/bitmap"];
+	NSArray * acceptedContentTypes = @[@"image/png",@"image/jpg",@"image/jpeg",@"image/bmp",@"image/gif",@"image/tiff"];
 	return [acceptedContentTypes containsObject:contentType];
 }
 
@@ -189,13 +183,12 @@ static NSURL * _cacheDir;
 		NSDate * createdDate = [self createdDateForFileURL:cachedImageURL];
 		NSTimeInterval diff = [now timeIntervalSinceDate:createdDate];
 		
-		//cache is still valid, don't reload
+		//cache is still valid, if file is available don't reload
 		if(cached.maxage > 0 && diff < cached.maxage) {
 			
 			//check if file is available.
 			if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
 				
-				//set image and don't reload it.
 				[self setImageInBackground:cachedImageURL completion:completion];
 				return;
 			}
