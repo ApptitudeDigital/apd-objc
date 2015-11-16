@@ -10,6 +10,7 @@ typedef void(^UIImageViewDiskCacheCompletion)(NSError * error, UIImage * image);
 @interface UIImageViewCache : NSObject <NSCoding>
 @property NSTimeInterval maxage;
 @property NSString * etag;
+@property BOOL nocache;
 @end
 
 @interface UIImageView (DiskCache)

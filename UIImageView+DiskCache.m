@@ -23,6 +23,7 @@ static NSURL * _cacheDir;
 	NSKeyedUnarchiver * un = (NSKeyedUnarchiver *)aDecoder;
 	self.maxage = [un decodeDoubleForKey:@"maxage"];
 	self.etag = [un decodeObjectForKey:@"etag"];
+	self.nocache = [un decodeBoolForKey:@"nocache"];
 	return self;
 }
 
@@ -30,6 +31,7 @@ static NSURL * _cacheDir;
 	NSKeyedArchiver * ar = (NSKeyedArchiver *)aCoder;
 	[ar encodeObject:self.etag forKey:@"etag"];
 	[ar encodeDouble:self.maxage forKey:@"maxage"];
+	[ar encodeBool:self.nocache forKey:@"nocache"];
 }
 
 @end
@@ -148,11 +150,17 @@ static NSURL * _cacheDir;
 	});
 }
 
-- (void) setMaxAgeForCacheInfo:(UIImageViewCache *) cacheInfo fromCacheControlString:(NSString *) cacheControl {
+- (void) setCacheControlForCacheInfo:(UIImageViewCache *) cacheInfo fromCacheControlString:(NSString *) cacheControl {
+	if([cacheControl isEqualToString:@"no-cache"]) {
+		cacheInfo.nocache = TRUE;
+		return;
+	}
+	
 	NSScanner * scanner = [[NSScanner alloc] initWithString:cacheControl];
 	NSString * prelim = nil;
 	[scanner scanUpToString:@"=" intoString:&prelim];
 	[scanner scanString:@"=" intoString:nil];
+	
 	double maxage = -1;
 	[scanner scanDouble:&maxage];
 	if(maxage > -1) {
@@ -166,44 +174,43 @@ static NSURL * _cacheDir;
 		completion([NSError errorWithDomain:UIImageViewDiskCacheErrorDomain code:UIImageViewDiskCacheErrorNilURL userInfo:@{NSLocalizedDescriptionKey:@"request.URL is nil"}],nil);
 	}
 	
-	//ignore built in cache from networking code. we handle ourselves.
-	request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
-	
+	//get cache file urls
 	NSURL * cacheInfoFile = [self localCacheControlFileURLForURL:request.URL];
 	NSURL * cachedImageURL = [self localFileURLForURL:request.URL];
+	
+	//setup blank cache object
 	UIImageViewCache * cached = [[UIImageViewCache alloc] init];
 	
-	//see if cache info file exists.
+	//load cached info file if it exists.
 	if([[NSFileManager defaultManager] fileExistsAtPath:cacheInfoFile.path]) {
-		
 		cached = [NSKeyedUnarchiver unarchiveObjectWithFile:cacheInfoFile.path];
-		
-		//check max age
-		NSDate * now = [NSDate date];
-		NSDate * createdDate = [self createdDateForFileURL:cachedImageURL];
-		NSTimeInterval diff = [now timeIntervalSinceDate:createdDate];
-		
-		//cache is still valid, if file is available don't reload
-		if(cached.maxage > 0 && diff < cached.maxage) {
-			
-			//check if file is available.
-			if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
-				
-				[self setImageInBackground:cachedImageURL completion:completion];
-				return;
-			}
-			
+	}
+	
+	//check max age
+	NSDate * now = [NSDate date];
+	NSDate * createdDate = [self createdDateForFileURL:cachedImageURL];
+	NSTimeInterval diff = [now timeIntervalSinceDate:createdDate];
+	BOOL cacheValid = FALSE;
+	
+	//check cache expiration
+	if(!cached.nocache && cached.maxage > 0 && diff < cached.maxage) {
+		cacheValid = TRUE;
+	}
+	
+	//set the image
+	if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
+		if(cacheValid) {
+			[self setImageInBackground:cachedImageURL completion:completion];
+			return;
 		} else {
 			
-			//the image will be loaded again below, set the available image so something shows up immediately
-			//even though the image is loaded again below.
-			
-			if([[NSFileManager defaultManager] fileExistsAtPath:cachedImageURL.path]) {
-				[self setImageInBackground:cachedImageURL completion:nil];
-			}
-			
+			//file is going to be reloaded below, set it here for placeholder
+			[self setImageInBackground:cachedImageURL completion:nil];
 		}
 	}
+	
+	//ignore built in cache from networking code. handled here instead.
+	request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
 	
 	//check if there's an etag from the server available.
 	if(cached.etag) {
@@ -228,11 +235,12 @@ static NSURL * _cacheDir;
 			NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *)response;
 			NSDictionary * headers = [httpResponse allHeaderFields];
 			
-			if(httpResponse.statusCode == 304) { //304 Not Modified. Use Cache.
+			//304 Not Modified. Use Cache.
+			if(httpResponse.statusCode == 304) {
 				
 				if(headers[@"Cache-Control"]) {
 					NSString * control = headers[@"Cache-Control"];
-					[self setMaxAgeForCacheInfo:cached fromCacheControlString:control];
+					[self setCacheControlForCacheInfo:cached fromCacheControlString:control];
 					[self writeCacheControlData:cached toFile:cacheInfoFile];
 				}
 				
@@ -240,12 +248,14 @@ static NSURL * _cacheDir;
 				return;
 			}
 			
+			//status not OK, error.
 			if(httpResponse.statusCode != 200) {
 				NSString * message = [NSString stringWithFormat:@"Invalid image cache response %li",(long)httpResponse.statusCode];
 				completion([NSError errorWithDomain:UIImageViewDiskCacheErrorDomain code:UIImageViewDiskCacheErrorResponseCode userInfo:@{NSLocalizedDescriptionKey:message}],nil);
 				return;
 			}
 			
+			//check that content type is an image.
 			NSString * contentType = headers[@"Content-Type"];
 			if(![weakself acceptedContentType:contentType]) {
 				completion([NSError errorWithDomain:UIImageViewDiskCacheErrorDomain code:UIImageViewDiskCacheErrorContentType userInfo:@{NSLocalizedDescriptionKey:@"Response was not an image"}],nil);
@@ -261,7 +271,7 @@ static NSURL * _cacheDir;
 				cached.etag = headers[@"ETag"];
 				
 				if(!headers[@"Cache-Control"]) {
-					NSLog(@"[UIImageView+DiskCache] WARNING: Image response ETag is set but no Cache-Control is available. "
+					NSLog(@"[UIImageView+DiskCache] WARNING: Image response header ETag is set but no Cache-Control is available. "
 						  @"Image requests will always be sent, the response may or may not be 304. "
 						  @"Add Cache-Control policies to the server to correctly have content expire locally.");
 				}
@@ -269,12 +279,17 @@ static NSURL * _cacheDir;
 			
 			if(headers[@"Cache-Control"]) {
 				NSString * control = headers[@"Cache-Control"];
-				[self setMaxAgeForCacheInfo:cached fromCacheControlString:control];
+				[self setCacheControlForCacheInfo:cached fromCacheControlString:control];
 			}
 			
 			weakself.image = [UIImage imageWithData:data];
+			
+			//save image to disk
 			[weakself writeData:data toFile:cachedImageURL];
+			
+			//save cached info file
 			[weakself writeCacheControlData:cached toFile:cacheInfoFile];
+			
 			completion(nil,weakself.image);
 		});
 	}];
