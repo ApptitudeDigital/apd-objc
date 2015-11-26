@@ -97,6 +97,19 @@ static NSArray * _productInfo;
 	return info[@"Name"];
 }
 
+- (NSString *) productTitleForProductId:(NSString *) productId; {
+	for(SKProduct * product in self.skproducts) {
+		if([product.productIdentifier isEqualToString:productId]) {
+			if(product.localizedTitle) {
+				return product.localizedTitle;
+			}
+		}
+	}
+	
+	NSDictionary * info = [self productInfoDictForProductId:productId];
+	return info[@"Title"];
+}
+
 - (NSString *) productTypeForProductId:(NSString *) productId {
 	NSDictionary * info = [self productInfoDictForProductId:productId];
 	return info[@"Type"];
