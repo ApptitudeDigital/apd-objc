@@ -53,6 +53,7 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 - (NSString *) productIdByName:(NSString *) productName;
 - (NSString *) productTypeForProductId:(NSString *) productId;
 - (NSString *) productNameByProductId:(NSString *) productId;
+- (NSString *) productTitleForProductId:(NSString *) productId;
 - (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist;
 
 //load product information from itunes.
