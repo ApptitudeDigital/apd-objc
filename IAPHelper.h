@@ -31,6 +31,10 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 // <dict>
 //  <key>Name</key>
 //  <string>NewBoard</string>
+//  <key>Title</key>
+//  <string>New Board</string>
+//  <key>Description</key>
+//  <string>Purchase a new board</string>
 //  <key>ProductId</key>
 //  <string>com.apptitude.SmilesAndFrowns.NewBoard</string>
 //  <key>Type</key>
@@ -39,6 +43,10 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 // <dict>
 //  <key>Name</key>
 //  <string>RemoveAds</string>
+//  <key>Title</key>
+//  <string>Remove Ads</string>
+//  <key>Description</key>
+//  <string>Remove ads from application</string>
 //  <key>ProductId</key>
 //  <string>com.apptitude.SmilesAndFrowns.RemoveAds</string>
 //  <key>Type</key>
@@ -54,6 +62,7 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 - (NSString *) productTypeForProductId:(NSString *) productId;
 - (NSString *) productNameByProductId:(NSString *) productId;
 - (NSString *) productTitleForProductId:(NSString *) productId;
+- (NSString *) productDescriptionForProductId:(NSString *) productId;
 - (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist;
 
 //load product information from itunes.
