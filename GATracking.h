@@ -26,6 +26,7 @@
 + (GATracking *) instance;
 + (GATracking *) tagManager;
 - (void) initTagManagerWithID:(NSString *) tagManagerId;
+- (void) initTagManagerWithID:(NSString *) tagManagerId allowIDFACollection:(BOOL) allowIDFA;
 - (void) trackScreen:(NSString *) screenName;
 - (void) trackScreenWithTagManager:(NSString *) screenName;
 - (void) trackEvent:(NSString *) event parameters:(NSDictionary *) parameters;

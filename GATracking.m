@@ -32,6 +32,8 @@ static BOOL _sessionStarted = FALSE;
 
 @interface GATracking ()
 @property NSMutableArray * delayedCalls;
+@property BOOL hasPushedIDFA;
+@property BOOL allowIDFACollection;
 @end
 
 @implementation GATracking
@@ -101,6 +103,11 @@ static BOOL _sessionStarted = FALSE;
 	self.delayedCalls = [NSMutableArray array];
 }
 
+- (void) initTagManagerWithID:(NSString *) tagManagerId allowIDFACollection:(BOOL) allowIDFA; {
+	self.allowIDFACollection = allowIDFA;
+	[self initTagManagerWithID:tagManagerId];
+}
+
 - (void) setLogLevel:(TAGLoggerLogLevelType) logLevel; {
 	if(logLevel == kTAGLoggerLogLevelNone) {
 		[TAGManager instance].logger = nil;
@@ -136,6 +143,14 @@ static BOOL _sessionStarted = FALSE;
 - (void) containerAvailable:(TAGContainer *) container {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self.container = container;
+		if(self.allowIDFACollection) {
+			if(!self.hasPushedIDFA) {
+				//Push the app launch event once after the container is opened.
+				[[TAGManager instance].dataLayer push:@{@"event": @"appLaunch"}];
+				self.hasPushedIDFA = YES;
+			}
+		}
+		
 	});
 }
 
