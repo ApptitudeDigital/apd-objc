@@ -1,6 +1,10 @@
+
 #import "UIViewControllerStack.h"
 
-
+NSString * const UIViewControllerStackNotificationWillPush;
+NSString * const UIViewControllerStackNotificationDidPush;
+NSString * const UIViewControllerStackNotificationWillPop;
+NSString * const UIViewControllerStackNotificationDidPop;
 
 @interface UIViewControllerStack ()
 @property NSMutableArray * viewControllers;
@@ -11,6 +15,7 @@
 - (void) defaultInit {
 	self.viewControllers = [NSMutableArray array];
 	self.animationDuration = .25;
+	self.delaysContentTouches = FALSE;
 }
 
 - (id) initWithCoder:(NSCoder *)aDecoder {
@@ -25,27 +30,69 @@
 	return self;
 }
 
+- (void) layoutSubviews {
+	[super layoutSubviews];
+	
+	UIViewController * current = [self currentViewController];
+	if(!current) {
+		return;
+	}
+	
+	//NSLog(@"layed out subviews");
+	[self resizeViewController:current];
+}
+
 - (void) resizeViewController:(UIViewController *) viewController {
 	if(!viewController) {
 		return;
 	}
 	
+	BOOL isSelfScrollView = [self isKindOfClass:[UIScrollView class]];
+	BOOL updatedFrame = FALSE;
 	CGRect f = viewController.view.frame;
 	UIViewController <UIViewControllerStackUpdating> * updating = (UIViewController <UIViewControllerStackUpdating> *) viewController;
+	
+	if(self.alwaysResizePushedViews) {
+		f.size.width = self.frame.size.width;
+		f.size.height = self.frame.size.height;
+		updatedFrame = TRUE;
+	}
 	
 	if([updating respondsToSelector:@selector(shouldResizeFrameForStackPush:)]) {
 		BOOL resize = [updating shouldResizeFrameForStackPush:self];
 		if(resize) {
 			f.size.width = self.frame.size.width;
 			f.size.height = self.frame.size.height;
-			viewController.view.frame = f;
+			updatedFrame = TRUE;
 		}
 	}
 	
-	if(self.alwaysResizePushedViews) {
-		f.size.width = self.frame.size.width;
-		f.size.height = self.frame.size.height;
-		viewController.view.frame = f;
+	if([updating respondsToSelector:@selector(viewFrameForViewStackController:isScrollView:)]) {
+		CGRect newFrame = [updating viewFrameForViewStackController:self isScrollView:isSelfScrollView];
+		if(!CGRectEqualToRect(newFrame, CGRectZero)) {
+			f = newFrame;
+			updatedFrame = TRUE;
+		}
+	}
+	
+	if([updating respondsToSelector:@selector(minViewHeightForViewStackController:isScrollView:)]) {
+		CGFloat minHeight = [updating minViewHeightForViewStackController:self isScrollView:isSelfScrollView];
+		updatedFrame = TRUE;
+		if(self.frame.size.height > minHeight) {
+			f.size.height = self.frame.size.height;
+		} else {
+			f.size.height = minHeight;
+		}
+	}
+	
+	viewController.view.frame = f;
+	
+	if([updating respondsToSelector:@selector(viewStack:didResizeViewController:)]) {
+		[updating viewStack:self didResizeViewController:updating];
+	}
+	
+	if(isSelfScrollView) {
+		self.contentSize = f.size;
 	}
 }
 
