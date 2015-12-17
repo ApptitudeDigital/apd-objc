@@ -34,12 +34,19 @@ static NSURL * _cacheDir;
 
 @end
 
+static BOOL acceptsAnySSLCertificate;
+
 @implementation UIImageView (DiskCache)
 
 + (void) initialize {
+	acceptsAnySSLCertificate = TRUE;
 	NSURL * appSupport = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
 	_cacheDir = [appSupport URLByAppendingPathComponent:@"UIImageViewDiskCache"];
 	[[NSFileManager defaultManager] createDirectoryAtURL:_cacheDir withIntermediateDirectories:TRUE attributes:nil error:nil];
+}
+
++ (void) setAcceptsAnySSLCertificate:(BOOL) acceptsAnySSLCertificate {
+	acceptsAnySSLCertificate = acceptsAnySSLCertificate;
 }
 
 + (void) setCacheDir:(NSURL *) dirURL {
@@ -76,6 +83,18 @@ static NSURL * _cacheDir;
 			}
 		}
 	});
+}
+
+- (NSURLSession *) session {
+	if(!acceptsAnySSLCertificate) {
+		return [NSURLSession sharedSession];
+	}
+	NSURLSessionConfiguration * config = [NSURLSessionConfiguration defaultSessionConfiguration];
+	return [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+}
+
+- (void) URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
+	completionHandler(NSURLSessionAuthChallengeUseCredential,[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
 }
 
 - (NSURL *) localFileURLForURL:(NSURL *) url {
@@ -218,7 +237,7 @@ static NSURL * _cacheDir;
 	
 	__weak UIImageView * weakself = self;
 	
-	NSURLSessionDataTask * task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+	NSURLSessionDataTask * task = [[self session] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if(error) {
 				completion(error,nil);
@@ -299,7 +318,7 @@ static NSURL * _cacheDir;
 	
 	__weak UIImageView * weakSelf = self;
 	
-	NSURLSessionDataTask * imageTask = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+	NSURLSessionDataTask * imageTask = [[self session] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if(error) {
 				completion(error,nil);

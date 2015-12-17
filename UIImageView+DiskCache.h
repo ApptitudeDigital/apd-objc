@@ -12,7 +12,10 @@ typedef void(^UIImageViewDiskCacheCompletion)(NSError * error, UIImage * image);
 @property NSString * etag;
 @end
 
-@interface UIImageView (DiskCache)
+@interface UIImageView (DiskCache) <NSURLSessionDelegate>
+
+//whether to trust any certificate.
++ (void) setAcceptsAnySSLCertificate:(BOOL) acceptsAnySSLCertificate;
 
 //set the cache dir. default is Home/Library/Caches/UIImageViewDiskCache
 + (void) setCacheDir:(NSURL *) dirURL;
