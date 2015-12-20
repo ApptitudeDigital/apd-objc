@@ -1,6 +1,11 @@
 
 #import "UIViewControllerStack.h"
 
+NSString * const UIViewControllerStackNotificationWillPush;
+NSString * const UIViewControllerStackNotificationDidPush;
+NSString * const UIViewControllerStackNotificationWillPop;
+NSString * const UIViewControllerStackNotificationDidPop;
+
 @interface UIViewControllerStack ()
 @property NSMutableArray * viewControllers;
 @end
@@ -10,6 +15,7 @@
 - (void) defaultInit {
 	self.viewControllers = [NSMutableArray array];
 	self.animationDuration = .25;
+	self.delaysContentTouches = FALSE;
 }
 
 - (id) initWithCoder:(NSCoder *)aDecoder {
@@ -24,27 +30,69 @@
 	return self;
 }
 
+- (void) layoutSubviews {
+	[super layoutSubviews];
+	
+	UIViewController * current = [self currentViewController];
+	if(!current) {
+		return;
+	}
+	
+	//NSLog(@"layed out subviews");
+	[self resizeViewController:current];
+}
+
 - (void) resizeViewController:(UIViewController *) viewController {
 	if(!viewController) {
 		return;
 	}
 	
+	BOOL isSelfScrollView = [self isKindOfClass:[UIScrollView class]];
+	BOOL updatedFrame = FALSE;
 	CGRect f = viewController.view.frame;
 	UIViewController <UIViewControllerStackUpdating> * updating = (UIViewController <UIViewControllerStackUpdating> *) viewController;
+	
+	if(self.alwaysResizePushedViews) {
+		f.size.width = self.frame.size.width;
+		f.size.height = self.frame.size.height;
+		updatedFrame = TRUE;
+	}
 	
 	if([updating respondsToSelector:@selector(shouldResizeFrameForStackPush:)]) {
 		BOOL resize = [updating shouldResizeFrameForStackPush:self];
 		if(resize) {
 			f.size.width = self.frame.size.width;
 			f.size.height = self.frame.size.height;
-			viewController.view.frame = f;
+			updatedFrame = TRUE;
 		}
 	}
 	
-	if(self.alwaysResizePushedViews) {
-		f.size.width = self.frame.size.width;
-		f.size.height = self.frame.size.height;
-		viewController.view.frame = f;
+	if([updating respondsToSelector:@selector(viewFrameForViewStackController:isScrollView:)]) {
+		CGRect newFrame = [updating viewFrameForViewStackController:self isScrollView:isSelfScrollView];
+		if(!CGRectEqualToRect(newFrame, CGRectZero)) {
+			f = newFrame;
+			updatedFrame = TRUE;
+		}
+	}
+	
+	if([updating respondsToSelector:@selector(minViewHeightForViewStackController:isScrollView:)]) {
+		CGFloat minHeight = [updating minViewHeightForViewStackController:self isScrollView:isSelfScrollView];
+		updatedFrame = TRUE;
+		if(self.frame.size.height > minHeight) {
+			f.size.height = self.frame.size.height;
+		} else {
+			f.size.height = minHeight;
+		}
+	}
+	
+	viewController.view.frame = f;
+	
+	if([updating respondsToSelector:@selector(viewStack:didResizeViewController:)]) {
+		[updating viewStack:self didResizeViewController:updating];
+	}
+	
+	if(isSelfScrollView) {
+		self.contentSize = f.size;
 	}
 }
 
@@ -78,6 +126,17 @@
 		[fromControllerUpdating viewStack:self willHideView:UIViewControllerStackOperationPush wasAnimated:(duration>0)];
 	}
 	
+	NSMutableDictionary *notificationObject = [[NSMutableDictionary alloc] init];
+	if(toController){
+		[notificationObject setObject:toController forKey:@"toController"];
+	}
+	if(fromController){
+		[notificationObject setObject:fromController forKey:@"fromController"];
+	}
+	[notificationObject setObject:self forKey:@"viewStack"];
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationWillPush object:notificationObject];
+	
 	//trigger animation, moving current off to the left, new view controller in from the right.
 	[UIView animateWithDuration:duration delay:0 options:options animations:^{
 		CGRect f;
@@ -105,6 +164,8 @@
 		if([toController respondsToSelector:@selector(viewStack:didShowView:wasAnimated:)]) {
 			[toControllerUpdating viewStack:self didShowView:UIViewControllerStackOperationPush wasAnimated:(duration>0)];
 		}
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationDidPush object:notificationObject];
 	}];
 }
 
@@ -138,6 +199,16 @@
 		[toControllerUpdating viewStack:self willShowView:UIViewControllerStackOperationPop wasAnimated:(duration>0)];
 	}
 	
+	NSMutableDictionary *notificationObject = [[NSMutableDictionary alloc] init];
+	if(toController){
+		[notificationObject setObject:toController forKey:@"toController"];
+	}
+	if(fromController){
+		[notificationObject setObject:fromController forKey:@"fromController"];
+	}
+	[notificationObject setObject:self forKey:@"viewStack"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationWillPop object:notificationObject];
+	
 	//trigger animation, moving popped off to right, next view controller in from the left
 	[UIView animateWithDuration:duration delay:0 options:options animations:^{
 		
@@ -164,6 +235,8 @@
 		if([toController respondsToSelector:@selector(viewStack:didShowView:wasAnimated:)]) {
 			[toControllerUpdating viewStack:self didShowView:UIViewControllerStackOperationPop wasAnimated:(duration>0)];
 		}
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:UIViewControllerStackNotificationDidPop object:notificationObject];
 	}];
 }
 

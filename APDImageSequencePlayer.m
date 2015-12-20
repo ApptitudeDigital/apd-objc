@@ -99,9 +99,13 @@
 	self.image = image;
 }
 
-- (void) playToFrame:(float) frame {
+- (void) playToFrame:(CGFloat) frame {
 	self.stopAtFrame = frame;
 	[self play];
+}
+
+- (void)seekToFrame:(CGFloat)frame{
+	self.position = frame/self.fps;
 }
 
 - (void)play{
@@ -136,10 +140,6 @@
 	if(self.delegate && [self.delegate respondsToSelector:@selector(sequencePlayerStopped:)]) {
 		[self.delegate sequencePlayerStopped:self];
 	}
-}
-
-- (void)seekToFrame:(CGFloat)frame{
-    self.position = frame/self.fps;
 }
 
 - (void)onTimerTick:(NSTimer *)timer{

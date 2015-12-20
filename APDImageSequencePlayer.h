@@ -27,7 +27,7 @@
 - (CGFloat)duration;
 - (NSUInteger)currentFrame;
 - (void)play;
-- (void)playToFrame:(float) frame;
+- (void)playToFrame:(CGFloat) frame;
 - (void)seekToFrame:(CGFloat)frame;
 - (void)pause;
 - (void)stop;

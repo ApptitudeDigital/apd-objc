@@ -36,5 +36,6 @@
 - (void) centerInRect:(CGRect) rect;
 - (void) horizontalCenterInRect:(CGRect) rect;
 - (void) verticalCenterInRect:(CGRect) rect;
+- (void) matchFrameSizeOfView:(UIView *)view;
 
 @end

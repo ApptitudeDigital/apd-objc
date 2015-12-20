@@ -8,20 +8,31 @@ typedef NS_ENUM(NSInteger,UIViewControllerStackOperation) {
 	UIViewControllerStackOperationPop
 };
 
+extern NSString * const UIViewControllerStackNotificationWillPush;
+extern NSString * const UIViewControllerStackNotificationDidPush;
+extern NSString * const UIViewControllerStackNotificationWillPop;
+extern NSString * const UIViewControllerStackNotificationDidPop;
+
 @protocol UIViewControllerStackUpdating <NSObject>
 @optional
 - (void) viewStack:(UIViewControllerStack *) viewStack willShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack willHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didShowView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
 - (void) viewStack:(UIViewControllerStack *) viewStack didHideView:(UIViewControllerStackOperation) operation wasAnimated:(BOOL) wasAnimated;
+- (void) viewStack:(UIViewControllerStack *) viewStack didResizeViewController:(UIViewController *) viewController;
 - (BOOL) shouldResizeFrameForStackPush:(UIViewControllerStack *) viewStack;
-//- (CGPoint) contentOriginInViewStack:(UIViewControllerStack *) viewStack;
+- (CGRect) viewFrameForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
+- (CGFloat) minViewHeightForViewStackController:(UIViewControllerStack *) viewStack isScrollView:(BOOL) isScrollView;
+
 @end
 
 IB_DESIGNABLE
-@interface UIViewControllerStack : UIView
+@interface UIViewControllerStack : UIScrollView
 
+//animation duration for push/popping view controllers that slide in / out.
 @property IBInspectable CGFloat animationDuration;
+
+//this always matches width/height. UIViewControllerStackViewResizing options are ignored.
 @property IBInspectable BOOL alwaysResizePushedViews;
 
 //methods for pushing/popping and altering what's displayed.
