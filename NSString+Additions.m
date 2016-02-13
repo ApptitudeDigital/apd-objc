@@ -41,4 +41,15 @@
 	return [self stringByReplacingOccurrencesOfString:@" " withString:@""].length < 1;
 }
 
+- (BOOL) isValidURL; {
+	//(https?|ftp):\\/\\/
+	NSString * pattern = @"^([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+\\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$";
+	NSRegularExpression * regex = [[NSRegularExpression alloc] initWithPattern:pattern options:0 error:nil];
+	NSArray * matches = [regex matchesInString:self options:0 range:NSMakeRange(0, self.length)];
+	if(matches.count < 1) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 @end
