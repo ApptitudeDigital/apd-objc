@@ -9,11 +9,10 @@ const NSInteger IAPHelperErrorCodeNoProducts = 2;
 
 static IAPHelper * _defaultHelper;
 static NSArray * _productInfo;
+static NSMutableDictionary * _loadedProducts;
 
 @interface IAPHelper ()
 @property BOOL isRestoring;
-@property NSArray * productIds;
-@property NSArray * skproducts;
 @property (strong) IAPHelperRestorePurchasesCompletion restorePurchasesCompletion;
 @property (strong) IAPHelperLoadProductsCompletion loadProductsCompletion;
 @property (strong) IAPHelperPurchaseProductCompletion purchaseProductCompletion;
@@ -39,7 +38,6 @@ static NSArray * _productInfo;
 
 - (id) init; {
 	self = [super init];
-	self.productIds = nil;
 	[[SKPaymentQueue defaultQueue] addTransactionObserver:self];
 	return self;
 }
@@ -98,29 +96,27 @@ static NSArray * _productInfo;
 }
 
 - (NSString *) productTitleForProductId:(NSString *) productId; {
-	for(SKProduct * product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			if(product.localizedTitle) {
-				return product.localizedTitle;
-			}
-		}
+	SKProduct * product = _loadedProducts[productId];
+	if(product.localizedTitle.length > 0) {
+		return product.localizedTitle;
 	}
-	
 	NSDictionary * info = [self productInfoDictForProductId:productId];
-	return info[@"Title"];
+	if(info) {
+		return info[@"Title"];
+	}
+	return nil;
 }
 
 - (NSString *) productDescriptionForProductId:(NSString *) productId; {
-	for(SKProduct * product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			if(product.localizedDescription) {
-				return product.localizedDescription;
-			}
-		}
+	SKProduct * product = _loadedProducts[productId];
+	if(product.localizedDescription.length > 0) {
+		return product.localizedDescription;
 	}
-	
 	NSDictionary * info = [self productInfoDictForProductId:productId];
-	return info[@"Description"];
+	if(info) {
+		return info[@"Description"];
+	}
+	return nil;
 }
 
 - (NSString *) productTypeForProductId:(NSString *) productId {
@@ -138,12 +134,7 @@ static NSArray * _productInfo;
 }
 
 - (NSNumber *) priceForItunesProductId:(NSString *) productId {
-	SKProduct * product = nil;
-	for(product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			break;
-		}
-	}
+	SKProduct * product = _loadedProducts[productId];
 	if(!product) {
 		return @(0);
 	}
@@ -151,21 +142,16 @@ static NSArray * _productInfo;
 }
 
 - (SKProduct *) productForItunesProductId:(NSString *) productId {
-	for(SKProduct * product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			return product;
-		}
-	}
-	return nil;
+	return _loadedProducts[productId];
+}
+
+- (SKProduct *) productForName:(NSString *) name {
+	NSString * productId = [self productIdByName:name];
+	return [self productForItunesProductId:productId];
 }
 
 - (NSString *) priceStringForItunesProductId:(NSString *) productId {
-	SKProduct * product = nil;
-	for(product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			break;
-		}
-	}
+	SKProduct * product = _loadedProducts[productId];
 	if(!product) {
 		return @"";
 	}
@@ -177,17 +163,40 @@ static NSArray * _productInfo;
 	return formattedPrice;
 }
 
+- (NSString *) priceStringForItunesProductNamed:(NSString *) name {
+	NSString * productId = [self productIdByName:name];
+	return [self priceStringForItunesProductId:productId];
+}
+
 - (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion {
 	self.loadProductsCompletion = completion;
-	self.productIds = productIds;
-	NSLog(@"loading products: %@",self.productIds);
-	SKProductsRequest * productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:self.productIds]];
+	NSLog(@"loading products: %@",productIds);
+	SKProductsRequest * productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productIds]];
 	productsRequest.delegate = self;
 	[productsRequest start];
 }
 
+- (void) loadItunesProductId:(NSString *) productId withCompletion:(IAPHelperLoadProductsCompletion) completion {
+	[self loadItunesProducts:@[productId] withCompletion:completion];
+}
+
+- (void) loadItunesProductNamed:(NSString *) productName withCompletion:(IAPHelperLoadProductsCompletion) completion {
+	NSString * productId = [self productIdByName:productName];
+	[self loadItunesProducts:@[productId] withCompletion:completion];
+}
+
+- (void) loadItunesProductsWithNames:(NSArray *) productNames withCompletion:(IAPHelperLoadProductsCompletion) completion {
+	NSArray * productIds = [self productIdsByNames:productNames];
+	[self loadItunesProducts:productIds withCompletion:completion];
+}
+
 - (void) productsRequest:(SKProductsRequest *) request didReceiveResponse:(SKProductsResponse *)response {
-	self.skproducts = response.products;
+	if(!_loadedProducts) {
+		_loadedProducts = [NSMutableDictionary dictionary];
+	}
+	for(SKProduct * product in response.products) {
+		_loadedProducts[product.productIdentifier] = product;
+	}
 	self.loadProductsCompletion(nil);
 }
 
@@ -199,22 +208,17 @@ static NSArray * _productInfo;
 	return [self purchaseItunesProductId:productId quantity:1 completion:completion];
 }
 
+- (void) purchaseItunesProductNamed:(NSString *) name completion:(IAPHelperPurchaseProductCompletion) completion; {
+	NSString * product = [self productIdByName:name];
+	[self purchaseItunesProductId:product completion:completion];
+}
+
 - (void) purchaseItunesProductId:(NSString *) productId quantity:(NSInteger) quantity completion:(IAPHelperPurchaseProductCompletion)completion {
-	SKProduct * purchaseProduct = nil;
-	
-	for(SKProduct * product in self.skproducts) {
-		if([product.productIdentifier isEqualToString:productId]) {
-			purchaseProduct = product;
-			break;
-		}
-	}
-	
+	SKProduct * purchaseProduct = _loadedProducts[productId];
 	if(!purchaseProduct) {
 		return completion([NSError errorWithDomain:IAPHelperDomain code:IAPHelperErrorCodeProductNotFound userInfo:@{NSLocalizedDescriptionKey:@"Product not loaded from iTunes Connect."}],nil);
 	}
-	
 	self.purchaseProductCompletion = completion;
-	
 	SKMutablePayment * payment = [SKMutablePayment paymentWithProduct:purchaseProduct];
 	payment.quantity = quantity;
 	[[SKPaymentQueue defaultQueue] addPayment:payment];
