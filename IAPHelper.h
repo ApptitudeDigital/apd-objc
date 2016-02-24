@@ -66,19 +66,27 @@ typedef void(^IAPHelperRestorePurchasesCompletion)(NSError * error, SKPaymentTra
 - (BOOL) hasPurchasedNonConsumableNamed:(NSString *) productNameInPlist;
 
 //load product information from itunes.
+- (void) loadItunesProductId:(NSString *) productId withCompletion:(IAPHelperLoadProductsCompletion) completion;
+- (void) loadItunesProductNamed:(NSString *) productName withCompletion:(IAPHelperLoadProductsCompletion) completion;
+- (void) loadItunesProductsWithNames:(NSArray *) productNames withCompletion:(IAPHelperLoadProductsCompletion) completion;
 - (void) loadItunesProducts:(NSArray *) productIds withCompletion:(IAPHelperLoadProductsCompletion) completion;
 
 //restore all purchases
 - (void) restorePurchasesWithCompletion:(IAPHelperRestorePurchasesCompletion) completion;
 
 //purchase a product id.
+- (void) purchaseItunesProductNamed:(NSString *) name completion:(IAPHelperPurchaseProductCompletion) completion;
 - (void) purchaseItunesProductId:(NSString *) productId completion:(IAPHelperPurchaseProductCompletion) completion;
 - (void) purchaseItunesProductId:(NSString *) productId quantity:(NSInteger) quantity completion:(IAPHelperPurchaseProductCompletion) completion;
+
+//get SKProduct after it's been loaded from itunes.
+- (SKProduct *) productForItunesProductId:(NSString *) productId;
+- (SKProduct *) productForName:(NSString *) name;
 
 //some utilities for display prices.
 - (NSString *) currencyCode;
 - (NSNumber *) priceForItunesProductId:(NSString *) productId;
 - (NSString *) priceStringForItunesProductId:(NSString *) productId;
-- (SKProduct *) productForItunesProductId:(NSString *) productId;
+- (NSString *) priceStringForItunesProductNamed:(NSString *) name;
 
 @end
