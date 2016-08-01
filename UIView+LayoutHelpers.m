@@ -127,6 +127,11 @@
 	self.frame = f;
 }
 
+- (void) offsetX:(CGFloat) x offsetY:(CGFloat) y; {
+	[self offsetX:x];
+	[self offsetY:y];
+}
+
 - (void) offsetWidth:(CGFloat) width; {
 	CGRect f = self.frame;
 	f.size.width += width;

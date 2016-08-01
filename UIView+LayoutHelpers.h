@@ -24,6 +24,7 @@
 - (CGFloat) maxX; //left+width of view.
 - (void) offsetX:(CGFloat) x;
 - (void) offsetY:(CGFloat) y;
+- (void) offsetX:(CGFloat) x offsetY:(CGFloat) y;
 - (void) offsetWidth:(CGFloat) width;
 - (void) offsetHeight:(CGFloat) height;
 - (void) offsetSize:(CGSize) size;
