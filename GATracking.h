@@ -11,6 +11,11 @@
 #import "TAGContainerOpener.h"
 #import "TAGContainer.h"
 
+#if __has_include(<FirebaseAnalytics/FirebaseAnalytics.h>)
+#import <FirebaseAnalytics/FirebaseAnalytics.h>
+#import <FirebaseCore/FirebaseCore.h>
+#endif
+
 @interface GATracking : NSObject <TAGContainerOpenerNotifier>
 
 //standard google analytics tracking
@@ -20,6 +25,9 @@
 + (void) trackScreen:(NSString *) screen;
 + (void) trackEventWithCategory:(NSString *) category action:(NSString *) action label:(NSString *) label;
 + (void) trackEventWithCategory:(NSString *) category action:(NSString *) action label:(NSString *) label andValue:(NSInteger) val;
+
+//Use Firebase
++ (void) FIRLogEventWithName:(NSString *) name parameters:(NSDictionary *) params;
 
 //TagManager methods. These require using [GATracking instance];
 @property TAGContainer * container;

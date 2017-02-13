@@ -1,5 +1,6 @@
 
 #import "GATracking.h"
+//#import "FireBase.h"
 
 static id <GAITracker> _tracker;
 static BOOL _sessionStarted = FALSE;
@@ -93,6 +94,10 @@ static BOOL _sessionStarted = FALSE;
 
 + (void) trackEventWithCategory:(NSString *) category action:(NSString *) action label:(NSString *) label {
 	[GATracking trackEventWithCategory:category action:action label:label andValue:0];
+}
+
++ (void) FIRLogEventWithName:(NSString *) name parameters:(NSDictionary *) params {
+	[FIRAnalytics logEventWithName:name parameters:params];
 }
 
 - (void) initTagManagerWithID:(NSString *) tagManagerId; {
